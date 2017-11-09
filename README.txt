@@ -16,7 +16,7 @@
 --
 --   F2          : Coin + Start 2 players
 --   F1          : Coin + Start 1 player
---   SPACE,CTRL  : Kick
+--   SPACE,CTRL  : Fire
 --   UP,DOWN,LEFT,RIGHT arrows : Movements
 --
 -- Joystick support.
