@@ -638,15 +638,9 @@ begin
       video(0)(4) := '0';
       video(1)(4) := '0';
       video(2)(4) := '0';
-      if not I_HWSEL_FROGGER then
-        video(0)(3) := '0'; -- b
-        video(1)(3) := shell_reg; -- g
-        video(2)(3) := shell_reg; -- r
-      else
-        video(0)(3) := '0'; -- b
-        video(1)(3) := '0'; -- g
-        video(2)(3) := '0'; -- r
-      end if;
+      video(0)(3) := '0'; -- b
+      video(1)(3) := '0'; -- g
+      video(2)(3) := '0'; -- r
 
       if (vidout_l = '0') then -- cs_l on col rom
 
@@ -681,14 +675,14 @@ begin
       end if;
       -- check for clip
       for i in 0 to 2 loop
-        if (video(i)(4) = '1') then
-          video(i)(3 downto 0) := (others => '1');
+        if video(i)(4) = '1' or video(i)(3) = '1' then
+          video(i)(2 downto 0) := (others => '1');
         end if;
       end loop;
 
-      O_VIDEO_B <= video(0)(3 downto 0);
-      O_VIDEO_G <= video(1)(3 downto 0);
-      O_VIDEO_R <= video(2)(3 downto 0);
+      O_VIDEO_B <= video(0)(2 downto 0) & video(0)(2);
+      O_VIDEO_G <= video(1)(2 downto 0) & video(1)(2);
+      O_VIDEO_R <= video(2)(2 downto 0) & video(2)(2);
     end if;
   end process;
 
