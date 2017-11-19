@@ -661,6 +661,11 @@ begin
         end if;
       end if;
 
+      if not I_HWSEL_FROGGER then
+        video(1) := video(1) + ("00" & shell_reg & "00");
+        video(2) := video(2) + ("00" & shell_reg & "00");
+      end if;
+
       -- add stars, background and video
       if not I_HWSEL_FROGGER then
         if (star_out_reg = '1') and (vidout_l = '1') then
