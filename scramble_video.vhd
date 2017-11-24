@@ -75,6 +75,10 @@ entity SCRAMBLE_VIDEO is
     O_VIDEO_G             : out std_logic_vector(3 downto 0);
     O_VIDEO_B             : out std_logic_vector(3 downto 0);
     --
+    dn_addr               : in  std_logic_vector(15 downto 0);
+    dn_data               : in  std_logic_vector(7 downto 0);
+    dn_wr                 : in  std_logic;
+    --
     ENA                   : in  std_logic;
     ENAB                  : in  std_logic;
     ENA_12                : in  std_logic;
@@ -181,6 +185,8 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal frogger_blue_out_reg : std_logic;
   -- scramble blue
   signal pout1_reg            : std_logic;
+
+  signal rom0_cs, rom1_cs     : std_logic;
 
 
 begin
@@ -312,16 +318,16 @@ begin
 	u_vram : work.dpram generic map (10,8)
 	port map
 	(
-		clk_a_i  => clk,
-		en_a_i   => ena,
-		we_i     => not I_VRAMWR_L,
+		clock_a   => clk,
+		enable_a  => ena,
+		wren_a    => not I_VRAMWR_L,
 
-      addr_a_i => vram_addr,
-		data_a_i => I_CPU_DATA,  -- only cpu can write
+		address_a => vram_addr,
+		data_a    => I_CPU_DATA,  -- only cpu can write
 
-		clk_b_i  => clk,
-      addr_b_i => vram_addr,
-		data_b_o => vram_dout
+		clock_b   => clk,
+		address_b => vram_addr,
+		q_b       => vram_dout
 	);
   O_VRAM_DATA <= vram_dout;
   
@@ -364,16 +370,16 @@ begin
 	u_object_ram : work.dpram generic map (8,8)
 	port map
 	(
-		clk_a_i  => clk,
-		en_a_i   => ena,
-		we_i     => not I_OBJRAMWR_L,
+		clock_a   => clk,
+		enable_a  => ena,
+		wren_a    => not I_OBJRAMWR_L,
 
-      addr_a_i => obj_addr,
-		data_a_i => I_CPU_DATA,  -- only cpu can write
+		address_a => obj_addr,
+		data_a    => I_CPU_DATA,  -- only cpu can write
 
-		clk_b_i  => clk,
-      addr_b_i => obj_addr,
-		data_b_o => hpla
+		clock_b   => clk,
+		address_b => obj_addr,
+		q_b       => hpla
 	);
 
   p_objdata_regs : process
@@ -407,10 +413,34 @@ begin
     end if;
   end process;
 
-  obj_rom0 : entity work.ROM_OBJ_0 -- 5H
-    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_0_dout);
-  obj_rom1 : entity work.ROM_OBJ_1 -- 5F
-    port map (CLK => CLK, ADDR => obj_rom_addr, DATA => obj_rom_1_dout);
+	rom0_cs <= '1' when dn_addr(15 downto 11) = X"4"&'0' else '0';
+	rom1_cs <= '1' when dn_addr(15 downto 11) = X"4"&'1' else '0';
+
+	obj_rom0 : work.dpram generic map (11,8) -- 5H
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and rom0_cs,
+		address_a => dn_addr(10 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => CLK,
+		address_b => obj_rom_addr,
+		q_b       => obj_rom_0_dout
+	);
+
+	obj_rom1 : work.dpram generic map (11,8) -- 5F
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and rom1_cs,
+		address_a => dn_addr(10 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => CLK,
+		address_b => obj_rom_addr,
+		q_b       => obj_rom_1_dout
+	);
 
   p_obj_rom_shift : process
     variable obj_rom_0_dout_s : std_logic_vector(7 downto 0);
@@ -565,16 +595,16 @@ begin
 	u_sprite_ram : work.dpram generic map (11,8)
 	port map
 	(
-		clk_a_i  => clk,
-		en_a_i   => ena,
-		we_i     => '1',
+		clock_a   => clk,
+		enable_a  => ena,
+		wren_a    => '1',
 
-      addr_a_i => sprite_ram_waddr,
-		data_a_i => sprite_ram_ip,
+		address_a => sprite_ram_waddr,
+		data_a    => sprite_ram_ip,
 
-		clk_b_i  => clk,
-      addr_b_i => cntr_addr_xor,
-		data_b_o => sprite_ram_op
+		clock_b   => clk,
+		address_b => cntr_addr_xor,
+		q_b       => sprite_ram_op
 	);
 
   gc(2 downto 0) <= sprite_ram_op(4 downto 2);

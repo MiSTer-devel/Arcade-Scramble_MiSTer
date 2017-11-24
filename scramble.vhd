@@ -68,6 +68,10 @@ entity SCRAMBLE is
     O_IOPC7               : out   std_logic;
     O_RESET_WD_L          : out   std_logic;
     --
+    dn_addr               : in  std_logic_vector(15 downto 0);
+    dn_data               : in  std_logic_vector(7 downto 0);
+    dn_wr                 : in  std_logic;
+    --
     ENA                   : in    std_logic;
     ENAB                  : in    std_logic;
     ENA_12                : in    std_logic;
@@ -251,6 +255,10 @@ begin
       O_VIDEO_R       => O_VIDEO_R,
       O_VIDEO_G       => O_VIDEO_G,
       O_VIDEO_B       => O_VIDEO_B,
+      --
+      dn_addr         => dn_addr,
+      dn_data         => dn_data,
+      dn_wr           => dn_wr,
       --
       ENA             => ENA,
       ENAB            => ENAB,
@@ -496,42 +504,32 @@ begin
   --
   --
   --  roms / rams
-  pgm_rom : entity work.ROM_PGM
-    port map (CLK => CLK, ADDR => cpu_addr(13 downto 0), DATA => rom_dout);
---  pgm_rom01 : entity work.ROM_PGM_01
---    port map (CLK => CLK, ENA => ENA, ADDR => cpu_addr(11 downto 0), DATA => pgm_rom_dout(0));
---  pgm_rom23 : entity work.ROM_PGM_23
---    port map (CLK => CLK, ENA => ENA, ADDR => cpu_addr(11 downto 0), DATA => pgm_rom_dout(1));
---  pgm_rom45 : entity work.ROM_PGM_45
---    port map (CLK => CLK, ENA => ENA, ADDR => cpu_addr(11 downto 0), DATA => pgm_rom_dout(2));
---  pgm_rom56 : entity work.ROM_PGM_67
---    port map (CLK => CLK, ENA => ENA, ADDR => cpu_addr(11 downto 0), DATA => pgm_rom_dout(3));
+	pgm_rom : work.dpram generic map (14,8)
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and (not dn_addr(15)) and (not dn_addr(14)),
+		address_a => dn_addr(13 downto 0),
+		data_a    => dn_data,
 
---  p_rom_mux : process(cpu_addr, pgm_rom_dout)
---   begin
---    rom_dout <= (others => '0');
---    case cpu_addr(13 downto 12) is
---      when "00" => rom_dout <= pgm_rom_dout(0);
---      when "01" => rom_dout <= pgm_rom_dout(1);
---      when "10" => rom_dout <= pgm_rom_dout(2);
---      when "11" => rom_dout <= pgm_rom_dout(3);
---      when others => null;
---    end case;
---  end process;
+		clock_b   => CLK,
+		address_b => cpu_addr(13 downto 0),
+		q_b       => rom_dout
+	);
 
 	u_cpu_ram : work.dpram generic map (11,8)
 	port map
 	(
-		clk_a_i  => clk,
-		en_a_i   => ena,
-		we_i     => ram_ena and (not cpu_wr_l),
+		clock_a   => clk,
+		enable_a  => ena,
+		wren_a    => ram_ena and (not cpu_wr_l),
 
-      addr_a_i => cpu_addr(10 downto 0),
-		data_a_i => cpu_data_out,
+		address_a => cpu_addr(10 downto 0),
+		data_a    => cpu_data_out,
 
-		clk_b_i  => clk,
-      addr_b_i => cpu_addr(10 downto 0),
-		data_b_o => ram_dout
+		clock_b   => clk,
+		address_b => cpu_addr(10 downto 0),
+		q_b       => ram_dout
 	);
 
   p_ram_ctrl : process(cpu_addr, page_4to7_l)

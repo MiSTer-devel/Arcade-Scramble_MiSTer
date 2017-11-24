@@ -69,6 +69,10 @@ entity SCRAMBLE_AUDIO is
     --
     I_DIP              : in    std_logic_vector( 5 downto 1);
     --
+    dn_addr            : in    std_logic_vector(15 downto 0);
+    dn_data            : in    std_logic_vector(7 downto 0);
+    dn_wr              : in    std_logic;
+    --
     I_RESET_L          : in    std_logic;
     ENA                : in    std_logic; -- 6 MHz
     ENA_1_79           : in    std_logic; -- 1.78975 MHz
@@ -176,6 +180,8 @@ architecture RTL of SCRAMBLE_AUDIO is
   signal audio_in_m_out_3D  : std_logic_vector(17 downto 0);
   signal audio_mult_3C      : std_logic_vector(35 downto 0);
   signal audio_mult_3D      : std_logic_vector(35 downto 0);
+
+  signal rom0_cs, rom1_cs, rom2_cs : std_logic;
 
 
 
@@ -295,26 +301,48 @@ begin
 
   end process;
 
-  u_rom_5c : entity work.ROM_SND_0
-    port map (
-      CLK         => CLK,
-      ADDR        => cpu_addr(10 downto 0),
-      DATA        => cpu_rom0_dout
-      );
+	rom0_cs <= '1' when dn_addr(15 downto 11) = X"5"&'0' else '0';
+	rom1_cs <= '1' when dn_addr(15 downto 11) = X"5"&'1' else '0';
+	rom2_cs <= '1' when dn_addr(15 downto 11) = X"6"&'0' else '0';
 
-  u_rom_5d : entity work.ROM_SND_1
-    port map (
-      CLK         => CLK,
-      ADDR        => cpu_addr(10 downto 0),
-      DATA        => cpu_rom1_dout
-      );
+	u_rom_5c : work.dpram generic map (11,8)
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and rom0_cs,
+		address_a => dn_addr(10 downto 0),
+		data_a    => dn_data,
 
-  u_rom_5e : entity work.ROM_SND_2
-    port map (
-      CLK         => CLK,
-      ADDR        => cpu_addr(10 downto 0),
-      DATA        => cpu_rom2_dout
-      );
+		clock_b   => CLK,
+		address_b => cpu_addr(10 downto 0),
+		q_b       => cpu_rom0_dout
+	);
+
+	u_rom_5d : work.dpram generic map (11,8)
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and rom1_cs,
+		address_a => dn_addr(10 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => CLK,
+		address_b => cpu_addr(10 downto 0),
+		q_b       => cpu_rom1_dout
+	);
+
+	u_rom_5e : work.dpram generic map (11,8)
+	port map
+	(
+		clock_a   => clk,
+		wren_a    => dn_wr and rom2_cs,
+		address_a => dn_addr(10 downto 0),
+		data_a    => dn_data,
+
+		clock_b   => CLK,
+		address_b => cpu_addr(10 downto 0),
+		q_b       => cpu_rom2_dout
+	);
 
   p_rom_mux : process(I_HWSEL_FROGGER, cpu_rom0_dout, cpu_rom1_dout, cpu_rom2_dout, cpu_addr, rom_oe)
     variable rom_oe_decode : std_logic;
@@ -344,14 +372,15 @@ begin
 	u_ram_6c_6d : work.dpram generic map (10,8)
 	port map
 	(
-        addr_a_i => cpu_addr(9 downto 0),
-        data_a_i => cpu_data_out,
-        clk_b_i  => clk,
-        addr_b_i => cpu_addr(9 downto 0),
-        data_b_o => ram_dout,
-        we_i     => ram_cs and (not cpu_wr_l),
-        en_a_i   => ENA_1_79,
-        clk_a_i  => clk
+        clock_a   => clk,
+        enable_a  => ENA_1_79,
+        wren_a    => ram_cs and (not cpu_wr_l),
+        address_a => cpu_addr(9 downto 0),
+        data_a    => cpu_data_out,
+
+        clock_b   => clk,
+        address_b => cpu_addr(9 downto 0),
+        q_b       => ram_dout
 	);
 
   p_cpu_data_mux : process(rom_dout, rom_active, ram_dout, ym2149_3C_oe_l, ym2149_3C_dv, ym2149_3D_oe_l, ym2149_3D_dv, ram_cs, cpu_wr_l)

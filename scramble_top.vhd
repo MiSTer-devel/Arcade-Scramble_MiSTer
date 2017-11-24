@@ -59,6 +59,10 @@ port (
 
 	button_in        : in  std_logic_vector(7 downto 0);
 
+	dn_addr          : in  std_logic_vector(15 downto 0);
+	dn_data          : in  std_logic_vector(7 downto 0);
+	dn_wr            : in  std_logic;
+
 	RESET            : in  std_logic;
 	clk              : in  std_logic; -- 25
 	ena_12           : in  std_logic; -- 6.25 x 2
@@ -116,6 +120,10 @@ port map (
 	O_IOPC7               => audio_iopc7,
 	O_RESET_WD_L          => audio_reset_l,
 	--
+	dn_addr               => dn_addr,
+	dn_data               => dn_data,
+	dn_wr                 => dn_wr,
+	--
 	ENA                   => ena_6,
 	ENAB                  => ena_6b,
 	ENA_12                => ena_12,
@@ -151,6 +159,10 @@ port map (
 	O_COIN_COUNTER     => open,
 	--
 	I_DIP              => ip_dip_switch,
+	--
+	dn_addr            => dn_addr,
+	dn_data            => dn_data,
+	dn_wr              => dn_wr,
 	--
 	I_RESET_L          => audio_reset_l,
 	ENA                => ena_6,
