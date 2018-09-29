@@ -93,8 +93,8 @@ localparam CONF_STR = {
 	"O34,Scanlines(vert),No,25%,50%,75%;",
 	"-;",
 	"T6,Reset;",
-	"J,Fire,Start 1P,Start 2P;",
-	"V,v2.00.",`BUILD_DATE
+	"J,Fire,Bomb,Start 1P,Start 2P;",
+	"V,v2.01.",`BUILD_DATE
 };
 
 ////////////////////   CLOCKS   ///////////////////
@@ -176,8 +176,8 @@ always @(posedge clk_sys) begin
 			'hX72: btn_down        <= pressed; // down
 			'hX6B: btn_left        <= pressed; // left
 			'hX74: btn_right       <= pressed; // right
-			'h029: btn_fire        <= pressed; // space
-			'h014: btn_fire        <= pressed; // ctrl
+			'h029: btn_fire2       <= pressed; // space
+			'h014: btn_fire1       <= pressed; // ctrl
 
 			'h005: btn_one_player  <= pressed; // F1
 			'h006: btn_two_players <= pressed; // F2
@@ -189,7 +189,8 @@ reg btn_up    = 0;
 reg btn_down  = 0;
 reg btn_right = 0;
 reg btn_left  = 0;
-reg btn_fire  = 0;
+reg btn_fire1 = 0;
+reg btn_fire2 = 0;
 reg btn_one_player  = 0;
 reg btn_two_players = 0;
 
@@ -197,10 +198,11 @@ wire m_up     = status[2] ? btn_left  | joy[1] : btn_up    | joy[3];
 wire m_down   = status[2] ? btn_right | joy[0] : btn_down  | joy[2];
 wire m_left   = status[2] ? btn_down  | joy[2] : btn_left  | joy[1];
 wire m_right  = status[2] ? btn_up    | joy[3] : btn_right | joy[0];
-wire m_fire   = btn_fire | joy[4];
+wire m_fire1  = btn_fire1 | joy[4];
+wire m_fire2  = btn_fire2 | joy[5];
 
-wire m_start1 = btn_one_player  | joy[5];
-wire m_start2 = btn_two_players | joy[6];
+wire m_start1 = btn_one_player  | joy[6];
+wire m_start2 = btn_two_players | joy[7];
 wire m_coin   = m_start1 | m_start2;
 
 wire hblank, vblank;
@@ -265,7 +267,7 @@ scramble_top scramble
 
 	.O_AUDIO(audio),
 
-	.button_in(~{m_start2, m_fire, m_coin, m_start1, m_right, m_left, m_down, m_up}),
+	.button_in(~{m_fire2, m_start2, m_fire1, m_coin, m_start1, m_right, m_left, m_down, m_up}),
 
 	.RESET(RESET | status[0] | status[6] | buttons[1]),
 	.clk(clk_sys),

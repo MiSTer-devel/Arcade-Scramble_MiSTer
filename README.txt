@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------
 -- 
 -- Arcade: Scramble port to MiSTer by Sorgelig
--- 10 November 2017
+-- 29 September 2018
 -- 
 ---------------------------------------------------------------------------------
 -- A simulation model of Scramble hardware
@@ -16,7 +16,8 @@
 --
 --   F2          : Coin + Start 2 players
 --   F1          : Coin + Start 1 player
---   SPACE,CTRL  : Fire
+--   CTRL        : Fire
+--   SPACE       : Bomb
 --   UP,DOWN,LEFT,RIGHT arrows : Movements
 --
 -- Joystick support.
