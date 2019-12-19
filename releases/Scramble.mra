@@ -1,0 +1,39 @@
+<misterromdescription>
+	<name>Scramble (Stern Electronics set 1)</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<year>1981</year>
+	<manufacturer>Konami (Stern Electronics license)</manufacturer>
+	<category>Space / Defender</category>
+	<rbf>scramble</rbf>
+	<rom index="0" zip="scrambles.zip" md5="5a94e70ada06e9063ca4d448a4ffa04a" type="nonmerged">
+		<part name="2d"/>
+		<part name="2e"/>
+		<part name="2f"/>
+		<part name="2h"/>
+		<part name="2j"/>
+		<part name="2l"/>
+		<part name="2m"/>
+		<part name="2p"/>
+		<part name="5h"/>
+		<part name="5f"/>
+		<part name="ot1.5c"/>
+		<part name="ot2.5d"/>
+		<part name="ot3.5e"/>
+	</rom>
+	<rom index="0" zip="scramble.zip" md5="5a94e70ada06e9063ca4d448a4ffa04a" type="merged">
+		<part name="scrambles/2d"/>
+		<part name="scrambles/2e"/>
+		<part name="scrambles/2f"/>
+		<part name="scrambles/2h"/>
+		<part name="scrambles/2j"/>
+		<part name="scrambles/2l"/>
+		<part name="scrambles/2m"/>
+		<part name="scrambles/2p"/>
+		<part name="scrambles/5h"/>
+		<part name="scrambles/5f"/>
+		<part name="ot1.5c"/>
+		<part name="ot2.5d"/>
+		<part name="ot3.5e"/>
+	</rom>
+</misterromdescription>
