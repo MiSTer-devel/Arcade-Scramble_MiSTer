@@ -100,8 +100,8 @@ assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd4;
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.SCRMBL;;",
-	"O1,Aspect Ratio,Original,Wide;",
-	"O2,Orientation,Vert,Horz;",
+	"H0O1,Aspect Ratio,Original,Wide;",
+	"H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
 	//"O89,Lives,3,5,4,255(Cheat);",
@@ -118,16 +118,18 @@ wire [5:1] m_dip = {status[13],status[11],status[12],~status[9:8]};
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys;
+wire clk_sys,clk_49;
 wire pll_locked;
 
 pll pll
 (
-	.refclk(CLK_50M),
-	.rst(0),
-	.outclk_0(clk_sys),
-	.locked(pll_locked)
+        .refclk(CLK_50M),
+        .rst(0),
+        .outclk_0(clk_49),
+        .outclk_1(clk_sys),
+        .locked(pll_locked)
 );
+
 
 reg ce_6p, ce_6n, ce_12, ce_1p79;
 always @(negedge clk_sys) begin
@@ -153,6 +155,7 @@ end
 wire [31:0] status;
 wire  [1:0] buttons;
 wire        forced_scandoubler;
+wire        direct_video;
 
 wire        ioctl_download;
 wire        ioctl_wr;
@@ -174,10 +177,12 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.conf_str(CONF_STR),
 
-	.buttons(buttons),
-	.status(status),
-	.forced_scandoubler(forced_scandoubler),
-	.gamma_bus(gamma_bus),
+        .buttons(buttons),
+        .status(status),
+        .status_menumask(direct_video),
+        .forced_scandoubler(forced_scandoubler),
+        .gamma_bus(gamma_bus),
+        .direct_video(direct_video),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
@@ -246,20 +251,20 @@ reg btn_fire1_2=0;
 reg btn_fire2_2=0;
 reg btn_test=0;
 
+wire no_rotate = status[2] & ~direct_video;
 
 
-
-wire m_up     = status[2] ? btn_left  | joy[1] : btn_up    | joy[3];
-wire m_down   = status[2] ? btn_right | joy[0] : btn_down  | joy[2];
-wire m_left   = status[2] ? btn_down  | joy[2] : btn_left  | joy[1];
-wire m_right  = status[2] ? btn_up    | joy[3] : btn_right | joy[0];
+wire m_up     = no_rotate ? btn_left  | joy[1] : btn_up    | joy[3];
+wire m_down   = no_rotate ? btn_right | joy[0] : btn_down  | joy[2];
+wire m_left   = no_rotate ? btn_down  | joy[2] : btn_left  | joy[1];
+wire m_right  = no_rotate ? btn_up    | joy[3] : btn_right | joy[0];
 wire m_fire1  = btn_fire1 | joy[4];
 wire m_fire2  = btn_fire2 | joy[5];
 
-wire m_up_2     = status[2] ? btn_left_2  | joy[1] : btn_up_2    | joy[3];
-wire m_down_2   = status[2] ? btn_right_2 | joy[0] : btn_down_2  | joy[2];
-wire m_left_2   = status[2] ? btn_down_2  | joy[2] : btn_left_2  | joy[1];
-wire m_right_2  = status[2] ? btn_up_2    | joy[3] : btn_right_2 | joy[0];
+wire m_up_2     = no_rotate ? btn_left_2  | joy[1] : btn_up_2    | joy[3];
+wire m_down_2   = no_rotate ? btn_right_2 | joy[0] : btn_down_2  | joy[2];
+wire m_left_2   = no_rotate ? btn_down_2  | joy[2] : btn_left_2  | joy[1];
+wire m_right_2  = no_rotate ? btn_up_2    | joy[3] : btn_right_2 | joy[0];
 wire m_fire1_2  = btn_fire1_2|joy[4];
 wire m_fire2_2  = btn_fire2_2|joy[5];
 
@@ -288,7 +293,7 @@ arcade_rotate_fx #(264,224,12,0) arcade_video
 (
         .*,
 
-        .clk_video(clk_sys),
+        .clk_video(clk_49),
 
         .RGB_in({r,g,b}),
         .HBlank(hblank),
@@ -296,10 +301,8 @@ arcade_rotate_fx #(264,224,12,0) arcade_video
         .HSync(hs),
         .VSync(vs),
 
-        .fx(status[5:3]),
-        .no_rotate(status[2])
+        .fx(status[5:3])
 );
-//screen_rotate #(264,224,12) screen_rotate
 
 wire [9:0] audio;
 assign AUDIO_L = {audio, 6'd0};
@@ -325,9 +328,9 @@ scramble_top scramble
 	//.button_in(~{m_fire2, m_start2, m_fire1, m_coin, m_start1, m_right, m_left, m_down, m_up}),
 	.ip_1p(~{m_start1|btn_start_1,m_fire2,m_fire1,m_left,m_right,m_up,m_down}),
 	.ip_2p(~{m_start2|btn_start_2,m_fire2_2,m_fire1_2,m_left_2,m_right_2,m_up_2,m_down_2}),
-   .ip_service(~status[14]),
-   .ip_coin1(m_coin|btn_coin_1|btn_coin_2),
-   .ip_coin2(1'b0),
+	.ip_service(~status[14]),
+	.ip_coin1(m_coin|btn_coin_1|btn_coin_2),
+	.ip_coin2(1'b0),
 
 	.RESET(RESET | status[0] | ioctl_download | buttons[1]),
 	.clk(clk_sys),
