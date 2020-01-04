@@ -1,0 +1,38 @@
+<misterromdescription>
+  <name>Battle of Atlantis (set 2)</name>
+  <mameversion>0217</mameversion>
+  <setname>atlantis2</setname>
+  <year>1981</year>
+  <manufacturer>Comsoft</manufacturer>
+  <rbf>scramble</rbf>
+  <rom index="0" zip="atlantis.zip" md5="badf8e58881d8964eda2f3f3ed93c643" type="merged">
+    <part name="atlantis2/boa_1.2c"/>
+    <part name="atlantis2/boa_2.2e"/>
+    <part name="atlantis2/boa_3.2f"/>
+    <part name="atlantis2/boa_4.2h"/>
+    <part name="2j"/>
+    <part name="atlantis2/boa_6.2l"/>
+    <part name="atlantis2/boa_7.2m"/>
+    <part name="atlantis2/boa_8.2p"/>
+    <part name="atlantis2/boa_10.5h"/>
+    <part name="atlantis2/boa_9.5f"/>
+    <part name="atlantis2/boa_11.5c"/>
+    <part name="ot2.5d"/>
+    <part name="ot3.5e"/>
+  </rom>
+  <rom index="0" zip="atlantis2.zip" md5="badf8e58881d8964eda2f3f3ed93c643" type="split">
+    <part name="boa_1.2c"/>
+    <part name="boa_2.2e"/>
+    <part name="boa_3.2f"/>
+    <part name="boa_4.2h"/>
+    <part name="2j" zip="atlantis.zip"/>
+    <part name="boa_6.2l"/>
+    <part name="boa_7.2m"/>
+    <part name="boa_8.2p"/>
+    <part name="boa_10.5h"/>
+    <part name="boa_9.5f"/>
+    <part name="boa_11.5c"/>
+    <part name="ot2.5d" zip="atlantis.zip"/>
+    <part name="ot3.5e" zip="atlantis.zip"/>
+  </rom>
+</misterromdescription>
