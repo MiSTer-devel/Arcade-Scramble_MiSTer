@@ -111,7 +111,8 @@ localparam CONF_STR = {
 	//"OE,Test,Off,On;",	
 	"-;",
 	"R0,Reset;",
-	"J1,Fire,Bomb,Start 1P,Start 2P;",
+	"J1,Fire,Bomb,Start 1P,Start 2P,Coin;",
+	"jn,A,B,Start,Select,R;",
 	"V,v",`BUILD_DATE
 };
 wire [5:1] m_dip = {status[13],status[11],status[12],~status[9:8]};
@@ -271,7 +272,7 @@ wire m_fire2_2  = btn_fire2_2|joy[5];
 
 wire m_start1 = btn_one_player  | joy[6];
 wire m_start2 = btn_two_players | joy[7];
-wire m_coin   = m_start1 | m_start2;
+wire m_coin   = m_start1 | m_start2 | joy[8];
 
 
 wire hblank, vblank;
@@ -280,13 +281,12 @@ wire hs, vs;
 wire [3:0] r,g;
 wire [3:0] b;
 
-
 reg ce_pix;
-always @(posedge clk_sys) begin
-        reg old_clk;
+always @(posedge clk_49) begin
+        reg [2:0] div;
 
-        old_clk <= ce_6p;
-        ce_pix <= old_clk & ~ce_6p;
+        div <= div + 1'd1;
+        ce_pix <= !div;
 end
 
 arcade_rotate_fx #(264,224,12,0) arcade_video
@@ -300,6 +300,8 @@ arcade_rotate_fx #(264,224,12,0) arcade_video
         .VBlank(vblank),
         .HSync(hs),
         .VSync(vs),
+
+        .rotate_ccw(0),
 
         .fx(status[5:3])
 );
