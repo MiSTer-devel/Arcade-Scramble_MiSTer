@@ -308,23 +308,19 @@ begin
     end if;
   end process;
 
-  u_cpu : entity work.T80sed
+  u_cpu : entity work.T80s
           port map (
               RESET_n => reset_wd_l,
-              CLK_n   => clk,
-              CLKEN   => cpu_ena,
+              CLK     => clk,
+              CEN     => cpu_ena,
               WAIT_n  => cpu_wait_l,
               INT_n   => cpu_int_l,
               NMI_n   => cpu_nmi_l,
               BUSRQ_n => cpu_busrq_l,
-              M1_n    => open,
               MREQ_n  => cpu_mreq_l,
-              IORQ_n  => open,
               RD_n    => cpu_rd_l,
               WR_n    => cpu_wr_l,
               RFSH_n  => cpu_rfsh_l,
-              HALT_n  => open,
-              BUSAK_n => open,
               A       => cpu_addr,
               DI      => cpu_data_in,
               DO      => cpu_data_out

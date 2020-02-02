@@ -213,34 +213,22 @@ begin
   --0000-17ff ROM
   --4000-43ff RAM
 
-  cpu_ena <= '1'; -- run at audio clock speed
-  -- other cpu signals
-  cpu_busrq_l <= '1';
-  cpu_nmi_l   <= '1';
-  cpu_wait_l  <= '1';
-  --
-  cpu_ena_gated <= ENA_1_79 and cpu_ena;
-  u_cpu : entity work.T80sed
-          port map (
-              RESET_n => I_RESET_L,
-              CLK_n   => CLK,
-              CLKEN   => cpu_ena_gated,
-              WAIT_n  => cpu_wait_l,
-              INT_n   => cpu_int_l,
-              NMI_n   => cpu_nmi_l,
-              BUSRQ_n => cpu_busrq_l,
-              M1_n    => cpu_m1_l,
-              MREQ_n  => cpu_mreq_l,
-              IORQ_n  => cpu_iorq_l,
-              RD_n    => cpu_rd_l,
-              WR_n    => cpu_wr_l,
-              RFSH_n  => cpu_rfsh_l,
-              HALT_n  => open,
-              BUSAK_n => open,
-              A       => cpu_addr,
-              DI      => cpu_data_in,
-              DO      => cpu_data_out
-              );
+  u_cpu : entity work.T80s
+	port map (
+		RESET_n => I_RESET_L,
+		CLK     => CLK,
+		CEN     => ENA_1_79,
+		INT_n   => cpu_int_l,
+		M1_n    => cpu_m1_l,
+		MREQ_n  => cpu_mreq_l,
+		IORQ_n  => cpu_iorq_l,
+		RD_n    => cpu_rd_l,
+		WR_n    => cpu_wr_l,
+		RFSH_n  => cpu_rfsh_l,
+		A       => cpu_addr,
+		DI      => cpu_data_in,
+		DO      => cpu_data_out
+	);
 
   p_cpu_int : process(CLK, I_RESET_L)
   begin
