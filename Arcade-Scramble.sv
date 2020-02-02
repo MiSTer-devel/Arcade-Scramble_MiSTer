@@ -209,13 +209,10 @@ always @(posedge clk_sys) begin
 			'hX74: btn_right       <= pressed; // right
 			'h029: btn_fire2       <= pressed; // space
 			'h014: btn_fire1       <= pressed; // ctrl
-
 			'h005: btn_one_player  <= pressed; // F1
 			'h006: btn_two_players <= pressed; // F2
+
 			// JPAC/IPAC/MAME Style Codes
-
-			'h005: btn_one_player  <= pressed; // F1
-			'h006: btn_two_players <= pressed; // F2
 			'h016: btn_start_1     <= pressed; // 1
 			'h01E: btn_start_2     <= pressed; // 2
 			'h02E: btn_coin_1      <= pressed; // 5
@@ -226,7 +223,6 @@ always @(posedge clk_sys) begin
 			'h034: btn_right_2     <= pressed; // G
 			'h01C: btn_fire1_2     <= pressed; // A
          'h01B: btn_fire2_2     <= pressed; // S			
-			'h02C: btn_test        <= pressed; // T
 		endcase
 	end
 end
@@ -250,10 +246,8 @@ reg btn_left_2=0;
 reg btn_right_2=0;
 reg btn_fire1_2=0;
 reg btn_fire2_2=0;
-reg btn_test=0;
 
 wire no_rotate = status[2] & ~direct_video;
-
 
 wire m_up     = no_rotate ? btn_left  | joy[1] : btn_up    | joy[3];
 wire m_down   = no_rotate ? btn_right | joy[0] : btn_down  | joy[2];
