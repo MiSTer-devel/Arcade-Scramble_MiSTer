@@ -84,8 +84,6 @@ module emu
 	// Set USER_OUT to 1 to read from USER_IN.
 	input   [6:0] USER_IN,
 	output  [6:0] USER_OUT
-	
-	
 );
 
 assign VGA_F1    = 0;
@@ -119,16 +117,14 @@ wire [5:1] m_dip = {status[13],status[11],status[12],~status[9:8]};
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys,clk_49;
-wire pll_locked;
+wire clk_sys,clk_vid;
 
 pll pll
 (
-        .refclk(CLK_50M),
-        .rst(0),
-        .outclk_0(clk_49),
-        .outclk_1(clk_sys),
-        .locked(pll_locked)
+	.refclk(CLK_50M),
+	.rst(0),
+	.outclk_0(clk_vid),
+	.outclk_1(clk_sys)
 );
 
 
@@ -178,12 +174,12 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.conf_str(CONF_STR),
 
-        .buttons(buttons),
-        .status(status),
-        .status_menumask(direct_video),
-        .forced_scandoubler(forced_scandoubler),
-        .gamma_bus(gamma_bus),
-        .direct_video(direct_video),
+	.buttons(buttons),
+	.status(status),
+	.status_menumask(direct_video),
+	.forced_scandoubler(forced_scandoubler),
+	.gamma_bus(gamma_bus),
+	.direct_video(direct_video),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
@@ -247,7 +243,7 @@ reg btn_right_2=0;
 reg btn_fire1_2=0;
 reg btn_fire2_2=0;
 
-wire no_rotate = status[2] & ~direct_video;
+wire no_rotate = status[2] | direct_video;
 
 wire m_up     = no_rotate ? btn_left  | joy[1] : btn_up    | joy[3];
 wire m_down   = no_rotate ? btn_right | joy[0] : btn_down  | joy[2];
@@ -270,34 +266,32 @@ wire m_coin   = m_start1 | m_start2 | joy[8];
 
 
 wire hblank, vblank;
-//wire ce_vid = clk_sys;
 wire hs, vs;
 wire [3:0] r,g;
 wire [3:0] b;
 
 reg ce_pix;
-always @(posedge clk_49) begin
-        reg [2:0] div;
+always @(posedge clk_vid) begin
+	reg [2:0] div;
 
-        div <= div + 1'd1;
-        ce_pix <= !div;
+	div <= div + 1'd1;
+	ce_pix <= !div;
 end
 
-arcade_rotate_fx #(264,224,12,0) arcade_video
+arcade_video #(264,224,12) arcade_video
 (
-        .*,
+	.*,
 
-        .clk_video(clk_49),
+	.clk_video(clk_vid),
 
-        .RGB_in({r,g,b}),
-        .HBlank(hblank),
-        .VBlank(vblank),
-        .HSync(hs),
-        .VSync(vs),
+	.RGB_in({r,g,b}),
+	.HBlank(hblank),
+	.VBlank(vblank),
+	.HSync(hs),
+	.VSync(vs),
 
-        .rotate_ccw(0),
-
-        .fx(status[5:3])
+	.rotate_ccw(0),
+	.fx(status[5:3])
 );
 
 wire [9:0] audio;
