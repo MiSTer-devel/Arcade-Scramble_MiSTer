@@ -44,6 +44,7 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_arith.all;
   use ieee.std_logic_unsigned.all;
+  use work.scramble_pack.all;
 
 entity SCRAMBLE_TOP is
 port (
@@ -52,36 +53,31 @@ port (
 	O_VIDEO_B        : out std_logic_vector(3 downto 0);
 	O_HSYNC          : out std_logic;
 	O_VSYNC          : out std_logic;
-   O_HBLANK         : out std_logic;
-   O_VBLANK         : out std_logic;
+	O_HBLANK         : out std_logic;
+	O_VBLANK         : out std_logic;
 
 	O_AUDIO          : out std_logic_vector(9 downto 0);
 
-	ip_dip_switch    : in  std_logic_vector(5 downto 1);
-	ip_1p            : std_logic_vector(6 downto 0);
-   ip_2p            : std_logic_vector(6 downto 0);
-   ip_service       : std_logic;
-   ip_coin1         : std_logic;
-   ip_coin2         : std_logic;
+	I_PA             : in  std_logic_vector(7 downto 0);
+	I_PB             : in  std_logic_vector(7 downto 0);
+	I_PC             : in  std_logic_vector(7 downto 0);
 
-	dn_addr          : in  std_logic_vector(15 downto 0);
-	dn_data          : in  std_logic_vector(7 downto 0);
-	dn_wr            : in  std_logic;
+	I_HWSEL          : in  integer;
 
 	RESET            : in  std_logic;
 	clk              : in  std_logic; -- 25
 	ena_12           : in  std_logic; -- 6.25 x 2
 	ena_6            : in  std_logic; -- 6.25 (inverted)
 	ena_6b           : in  std_logic; -- 6.25
-	ena_1_79         : in  std_logic  -- 1.786          
+	ena_1_79         : in  std_logic; -- 1.786          
+
+	dl_addr          : in  std_logic_vector(15 downto 0);
+	dl_wr            : in  std_logic;
+	dl_data          : in  std_logic_vector( 7 downto 0)
 );
 end;
 
 architecture RTL of SCRAMBLE_TOP is
--- this MUST be set true for frogger
--- this MUST be set false for scramble, the_end, amidar
-constant I_HWSEL_FROGGER  : boolean := false;
-
 
 -- ties to audio board
 signal audio_addr       : std_logic_vector(15 downto 0);
@@ -97,15 +93,15 @@ begin
 
 u_scramble : entity work.SCRAMBLE
 port map (
-	I_HWSEL_FROGGER       => I_HWSEL_FROGGER,
+	I_HWSEL               => I_HWSEL,
 	--
 	O_VIDEO_R             => O_VIDEO_R,
 	O_VIDEO_G             => O_VIDEO_G,
 	O_VIDEO_B             => O_VIDEO_B,
 	O_HSYNC               => O_HSYNC,
 	O_VSYNC               => O_VSYNC,
-   O_HBLANK              => O_HBLANK,
-   O_VBLANK              => O_VBLANK,
+	O_HBLANK              => O_HBLANK,
+	O_VBLANK              => O_VBLANK,
 	--
 	-- to audio board
 	--
@@ -118,16 +114,16 @@ port map (
 	O_IOPC7               => audio_iopc7,
 	O_RESET_WD_L          => audio_reset_l,
 	--
-	dn_addr               => dn_addr,
-	dn_data               => dn_data,
-	dn_wr                 => dn_wr,
-	--
 	ENA                   => ena_6,
 	ENAB                  => ena_6b,
 	ENA_12                => ena_12,
 	--
 	RESET                 => reset,
-	CLK                   => clk
+	CLK                   => clk,
+	--
+	dl_addr               => dl_addr,
+	dl_wr                 => dl_wr,
+	dl_data               => dl_data
 );
 
 --
@@ -136,7 +132,7 @@ port map (
 --
 u_audio : entity work.SCRAMBLE_AUDIO
 port map (
-	I_HWSEL_FROGGER    => I_HWSEL_FROGGER,
+	I_HWSEL            => I_HWSEL,
 	--
 	I_ADDR             => audio_addr,
 	I_DATA             => audio_data_out,
@@ -149,38 +145,19 @@ port map (
 	--
 	O_AUDIO            => O_AUDIO,
 	--
-	I_1P_CTRL          => ip_1p, -- start, shoot1, shoot2, left,right,up,down
-	I_2P_CTRL          => ip_2p, -- start, shoot1, shoot2, left,right,up,down
-	I_SERVICE          => ip_service,
-	I_COIN1            => ip_coin1,
-	I_COIN2            => ip_coin2,
+	I_PA               => I_PA,
+	I_PB               => I_PB,
+	I_PC               => I_PC,
 	O_COIN_COUNTER     => open,
-	--
-	I_DIP              => ip_dip_switch,
-	--
-	dn_addr            => dn_addr,
-	dn_data            => dn_data,
-	dn_wr              => dn_wr,
 	--
 	I_RESET_L          => audio_reset_l,
 	ENA                => ena_6,
 	ENA_1_79           => ena_1_79,
-	CLK                => clk
+	CLK                => clk,
+	--
+	dl_addr            => dl_addr,
+	dl_wr              => dl_wr,
+	dl_data            => dl_data
 );
-
---button_in(0) = Joystick Up
---button_in(1) = Joystick Down
---button_in(2) = Joystick Left
---button_in(3) = Joystick Right
---button_in(4) = Button Left
---button_in(5) = Button Down
---button_in(6) = Joystick Fire
---button_in(7) = Button Right
-
---Buttons are connected to ground and connect to 3.3V when pressed
---Joystick has internal pullup resistor and connects to ground when pressed
-
---A '0' on the input is active. Inputs are active low.
-
 
 end RTL;

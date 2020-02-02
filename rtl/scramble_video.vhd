@@ -44,10 +44,11 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_arith.all;
   use ieee.std_logic_unsigned.all;
+  use work.scramble_pack.all;
 
 entity SCRAMBLE_VIDEO is
   port (
-    I_HWSEL_FROGGER       : in    boolean;
+    I_HWSEL               : in  integer;
     --
     I_HCNT                : in  std_logic_vector(8 downto 0);
     I_VCNT                : in  std_logic_vector(8 downto 0);
@@ -75,14 +76,14 @@ entity SCRAMBLE_VIDEO is
     O_VIDEO_G             : out std_logic_vector(3 downto 0);
     O_VIDEO_B             : out std_logic_vector(3 downto 0);
     --
-    dn_addr               : in  std_logic_vector(15 downto 0);
-    dn_data               : in  std_logic_vector(7 downto 0);
-    dn_wr                 : in  std_logic;
-    --
     ENA                   : in  std_logic;
     ENAB                  : in  std_logic;
     ENA_12                : in  std_logic;
-    CLK                   : in  std_logic
+    CLK                   : in  std_logic;
+
+    dl_addr               : in  std_logic_vector(15 downto 0);
+    dl_wr                 : in  std_logic;
+    dl_data               : in  std_logic_vector(7 downto 0)
     );
 end;
 
@@ -138,7 +139,7 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal hpla                 : std_logic_vector(7 downto 0);
   signal objdata              : std_logic_vector(7 downto 0);
 
-  signal obj_rom_addr         : std_logic_vector(10 downto 0);
+  signal obj_rom_addr         : std_logic_vector(12 downto 0);
   signal obj_rom_0_dout       : std_logic_vector(7 downto 0);
   signal obj_rom_1_dout       : std_logic_vector(7 downto 0);
   --
@@ -186,8 +187,9 @@ architecture RTL of SCRAMBLE_VIDEO is
   -- scramble blue
   signal pout1_reg            : std_logic;
 
-  signal rom0_cs, rom1_cs     : std_logic;
-
+  signal obj_rom_0_wr         : std_logic;
+  signal obj_rom_1_wr         : std_logic;
+  signal col_rom_wr           : std_logic;
 
 begin
   p_hcnt_decode : process(I_HCNT)
@@ -218,7 +220,7 @@ begin
         cblank_l <= cblank_s;
         h256_l_s <= h256_l;
 
-        if not I_HWSEL_FROGGER then
+        if I_HWSEL /= I_HWSEL_FROGGER then
           cd     <= col_reg;
         else
           cd     <= col_reg(0) & col_reg(2 downto 1);
@@ -254,9 +256,9 @@ begin
     end loop;
   end process;
 
-  p_video_addr_calc : process(I_HWSEL_FROGGER, vcnt_f, hpla)
+  p_video_addr_calc : process(I_HWSEL, vcnt_f, hpla)
   begin
-    if not I_HWSEL_FROGGER then
+    if I_HWSEL /= I_HWSEL_FROGGER then
       vram_addr_sum <= ('0' & vcnt_f(7 downto 0)) + ('0' & hpla(7 downto 0));
     else
       vram_addr_sum <= ('0' & vcnt_f(7 downto 0)) + ('0' & hpla(3 downto 0) & hpla(7 downto 4));
@@ -283,10 +285,11 @@ begin
     end if;
   end process;
 
-  p_vram_xor : process(vram_addr_reg, objdata, h256)
+  p_vram_xor : process(vram_addr_reg, objdata, h256, I_HWSEL)
     variable flip : std_logic;
   begin
     flip := objdata(7) and h256;
+
     for i in 0 to 3 loop
       vram_addr_xor(i) <= vram_addr_reg(i) xor flip;
     end loop;
@@ -318,16 +321,16 @@ begin
 	u_vram : work.dpram generic map (10,8)
 	port map
 	(
-		clock_a   => clk,
-		enable_a  => ena,
-		wren_a    => not I_VRAMWR_L,
+		clk_a_i  => clk,
+		en_a_i   => ena,
+		we_i     => not I_VRAMWR_L,
 
-		address_a => vram_addr,
-		data_a    => I_CPU_DATA,  -- only cpu can write
+		addr_a_i => vram_addr,
+		data_a_i => I_CPU_DATA,  -- only cpu can write
 
-		clock_b   => clk,
-		address_b => vram_addr,
-		q_b       => vram_dout
+		clk_b_i  => clk,
+		addr_b_i => vram_addr,
+		data_b_o => vram_dout
 	);
   O_VRAM_DATA <= vram_dout;
   
@@ -370,16 +373,16 @@ begin
 	u_object_ram : work.dpram generic map (8,8)
 	port map
 	(
-		clock_a   => clk,
-		enable_a  => ena,
-		wren_a    => not I_OBJRAMWR_L,
+		clk_a_i  => clk,
+		en_a_i   => ena,
+		we_i     => not I_OBJRAMWR_L,
 
-		address_a => obj_addr,
-		data_a    => I_CPU_DATA,  -- only cpu can write
+		addr_a_i => obj_addr,
+		data_a_i => I_CPU_DATA,  -- only cpu can write
 
-		clock_b   => clk,
-		address_b => obj_addr,
-		q_b       => hpla
+		clk_b_i  => clk,
+		addr_b_i => obj_addr,
+		data_b_o => hpla
 	);
 
   p_objdata_regs : process
@@ -402,89 +405,114 @@ begin
     end if;
   end process;
 
-  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT)
+  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_HWSEL)
+  variable obj_rom_addr_base : std_logic_vector(12 downto 0);
   begin
-    obj_rom_addr( 2 downto 0) <= vram_addr_xor(2 downto 0);
+    obj_rom_addr_base( 2 downto 0) := vram_addr_xor(2 downto 0);
     if (h256 = '0') then
-     -- a
-      obj_rom_addr(10 downto 3) <= vram_dout; -- background objects
+      obj_rom_addr_base(12 downto 3) := "00" & vram_dout; -- background objects
     else
-      obj_rom_addr(10 downto 3) <= objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
+      obj_rom_addr_base(12 downto 11) := "00";
+      if I_HWSEL = I_HWSEL_CALIPSO then
+        obj_rom_addr_base(12 downto 11) := objdata(7 downto 6);
+      end if;
+      obj_rom_addr_base(10 downto 3) := objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
     end if;
+
+    if I_HWSEL = I_HWSEL_ANTEATER then
+      obj_rom_addr <= "00" & not(obj_rom_addr_base(0) xor obj_rom_addr_base(6)) & 
+                      (obj_rom_addr_base(2) xor obj_rom_addr_base(10)) &
+                      obj_rom_addr_base(8 downto 7) &
+                      (obj_rom_addr_base(4) xor obj_rom_addr_base(9) xor (obj_rom_addr_base(2) and obj_rom_addr_base(10))) &
+                      obj_rom_addr_base(5 downto 0);
+    elsif I_HWSEL = I_HWSEL_LOSTTOMB then
+      obj_rom_addr <= "00" & ((obj_rom_addr_base(1) and obj_rom_addr_base(7)) or (not obj_rom_addr_base(1) and obj_rom_addr_base(8))) & 
+                      obj_rom_addr_base(9) &
+                      (obj_rom_addr_base(7) xor (obj_rom_addr_base(1) and (obj_rom_addr_base(7) xor obj_rom_addr_base(10)))) &
+                      ((obj_rom_addr_base(1) and obj_rom_addr_base(8)) or (not obj_rom_addr_base(1) and obj_rom_addr_base(10))) &
+                      obj_rom_addr_base(6 downto 0);
+    else
+      obj_rom_addr <= obj_rom_addr_base;
+    end if;
+
   end process;
 
-	rom0_cs <= '1' when dn_addr(15 downto 11) = X"4"&'0' else '0';
-	rom1_cs <= '1' when dn_addr(15 downto 11) = X"4"&'1' else '0';
-
-	obj_rom0 : work.dpram generic map (11,8) -- 5H
+	obj_rom0 : work.dpram generic map (13,8) --5H
 	port map
 	(
-		clock_a   => clk,
-		wren_a    => dn_wr and rom0_cs,
-		address_a => dn_addr(10 downto 0),
-		data_a    => dn_data,
-
-		clock_b   => CLK,
-		address_b => obj_rom_addr,
-		q_b       => obj_rom_0_dout
+		clk_a_i  => clk,
+		en_a_i   => '1',
+		we_i     => obj_rom_0_wr,
+		
+		addr_a_i => dl_addr(12 downto 0),
+		data_a_i => dl_data,
+		
+		clk_b_i  => clk,
+		addr_b_i => obj_rom_addr,
+		data_b_o => obj_rom_0_dout
 	);
 
-	obj_rom1 : work.dpram generic map (11,8) -- 5F
+	obj_rom_0_wr <= '1' when dl_wr = '1' and dl_addr(15 downto 13) = "101" else '0'; -- A000-BFFF
+
+	obj_rom1 : work.dpram generic map (13,8) --5F
 	port map
 	(
-		clock_a   => clk,
-		wren_a    => dn_wr and rom1_cs,
-		address_a => dn_addr(10 downto 0),
-		data_a    => dn_data,
+		clk_a_i  => clk,
+		en_a_i   => '1',
+		we_i     => obj_rom_1_wr,
 
-		clock_b   => CLK,
-		address_b => obj_rom_addr,
-		q_b       => obj_rom_1_dout
+		addr_a_i => dl_addr(12 downto 0),
+		data_a_i => dl_data,
+
+		clk_b_i  => clk,
+		addr_b_i => obj_rom_addr,
+		data_b_o => obj_rom_1_dout
 	);
 
-  p_obj_rom_shift : process
-    variable obj_rom_0_dout_s : std_logic_vector(7 downto 0);
-  begin
-    wait until rising_edge (CLK);
-    if not I_HWSEL_FROGGER then
-      obj_rom_0_dout_s := obj_rom_0_dout;
-    else -- swap bits 0 and 1
-      obj_rom_0_dout_s := obj_rom_0_dout(7 downto 2) & obj_rom_0_dout(0) & obj_rom_0_dout(1);
-   end if;
+	obj_rom_1_wr <= '1' when dl_wr = '1' and dl_addr(15 downto 13) = "110" else '0'; -- C000-DFFF
 
-    if (ENA = '1') then
-      case shift_sel is
-        when "00" => null; -- do nothing
 
-        when "01" => shift_reg_1 <= '0' & shift_reg_1(7 downto 1); -- right
-                     shift_reg_0 <= '0' & shift_reg_0(7 downto 1);
+	p_obj_rom_shift : process
+		variable obj_rom_0_dout_s : std_logic_vector(7 downto 0);
+	begin
+		wait until rising_edge (CLK);
+		if I_HWSEL /= I_HWSEL_FROGGER then
+			obj_rom_0_dout_s := obj_rom_0_dout;
+		else -- swap bits 0 and 1
+			obj_rom_0_dout_s := obj_rom_0_dout(7 downto 2) & obj_rom_0_dout(0) & obj_rom_0_dout(1);
+		end if;
 
-        when "10" => shift_reg_1 <= shift_reg_1(6 downto 0) & '0'; -- left
-                     shift_reg_0 <= shift_reg_0(6 downto 0) & '0';
+		if (ENA = '1') then
+			case shift_sel is
+				when "00" => null; -- do nothing
 
-        when "11" => shift_reg_1 <= obj_rom_1_dout  (7 downto 0); -- load
-                     shift_reg_0 <= obj_rom_0_dout_s(7 downto 0);
-        when others => null;
-      end case;
-    end if;
-  end process;
+				when "01" => shift_reg_1 <= '0' & shift_reg_1(7 downto 1); -- right
+								 shift_reg_0 <= '0' & shift_reg_0(7 downto 1);
 
-  p_obj_rom_shift_sel : process(hcmp2, ldout, shift_reg_1, shift_reg_0)
-  begin
-    if (hcmp2 = '0') then
+				when "10" => shift_reg_1 <= shift_reg_1(6 downto 0) & '0'; -- left
+								 shift_reg_0 <= shift_reg_0(6 downto 0) & '0';
 
-      shift_sel(1) <= '1';
-      shift_sel(0) <= ldout;
-      shift_op(1)  <= shift_reg_1(7);
-      shift_op(0)  <= shift_reg_0(7);
-    else
+				when "11" => shift_reg_1 <= obj_rom_1_dout  (7 downto 0); -- load
+								 shift_reg_0 <= obj_rom_0_dout_s(7 downto 0);
+				when others => null;
+			end case;
+		end if;
+	end process;
 
-      shift_sel(1) <= ldout;
-      shift_sel(0) <= '1';
-      shift_op(1)  <= shift_reg_1(0);
-      shift_op(0)  <= shift_reg_0(0);
-    end if;
-  end process;
+	p_obj_rom_shift_sel : process(hcmp2, ldout, shift_reg_1, shift_reg_0)
+	begin
+		if (hcmp2 = '0') then
+			shift_sel(1) <= '1';
+			shift_sel(0) <= ldout;
+			shift_op(1)  <= shift_reg_1(7);
+			shift_op(0)  <= shift_reg_0(7);
+		else
+			shift_sel(1) <= ldout;
+			shift_sel(0) <= '1';
+			shift_op(1)  <= shift_reg_1(0);
+			shift_op(0)  <= shift_reg_0(0);
+		end if;
+	end process;
 
   p_video_out_logic : process(shift_op, cd, gr, gc)
     variable vidon : std_logic;
@@ -595,16 +623,16 @@ begin
 	u_sprite_ram : work.dpram generic map (11,8)
 	port map
 	(
-		clock_a   => clk,
-		enable_a  => ena,
-		wren_a    => '1',
+		clk_a_i  => clk,
+		en_a_i   => ena,
+		we_i     => '1',
 
-		address_a => sprite_ram_waddr,
-		data_a    => sprite_ram_ip,
+		addr_a_i => sprite_ram_waddr,
+		data_a_i => sprite_ram_ip,
 
-		clock_b   => clk,
-		address_b => cntr_addr_xor,
-		q_b       => sprite_ram_op
+		clk_b_i  => clk,
+		addr_b_i => cntr_addr_xor,
+		data_b_o => sprite_ram_op
 	);
 
   gc(2 downto 0) <= sprite_ram_op(4 downto 2);
@@ -645,20 +673,24 @@ begin
     end if;
   end process;
 
--- Non BRAM (LUT) Version
---  col_rom : entity work.ROM_LUT
---    port map(
---      ADDR        => obj_video_out_reg(4 downto 0),
---      DATA        => obj_lut_out
---      );
+	-- BRAM Version
+	col_rom : work.dpram generic map (5,8)
+	port map
+	(
+		clk_a_i  => clk,
+		en_a_i   => '1',
+		we_i     => col_rom_wr,
 
--- BRAM Version
-  col_rom : entity work.ROM_LUT
-    port map(
-		CLK => CLK, 
-      ADDR        => obj_video_out_reg(4 downto 0),
-      DATA        => obj_lut_out
-      );
+		addr_a_i => dl_addr(4 downto 0),
+		data_a_i => dl_data,
+
+		clk_b_i  => clk,
+		addr_b_i => obj_video_out_reg(4 downto 0),
+		data_b_o => obj_lut_out
+	);
+
+	col_rom_wr <= '1' when dl_wr = '1' and (dl_addr(15 downto 5) = (x"E0"&"000")) else '0'; -- E000-E01F
+	
 
   p_col_rom_ce : process
     variable video : array_3x5;
@@ -685,19 +717,19 @@ begin
       --
       -- end of direct assigns
       --
-      if I_HWSEL_FROGGER then
+      if I_HWSEL = I_HWSEL_FROGGER then
         if (frogger_blue_out_reg = '1') and (vidout_l = '1') then
           video(0) := video(0) + "00010";
         end if;
       end if;
 
-      if not I_HWSEL_FROGGER then
+      if I_HWSEL /= I_HWSEL_FROGGER then
         video(1) := video(1) + ("00" & shell_reg & "00");
         video(2) := video(2) + ("00" & shell_reg & "00");
       end if;
 
       -- add stars, background and video
-      if not I_HWSEL_FROGGER then
+      if I_HWSEL /= I_HWSEL_FROGGER then
         if (star_out_reg = '1') and (vidout_l = '1') then
           video(0) := video(0) + ( '0' & star_shift_t1(13 downto 12) & "00");
           video(1) := video(1) + ( '0' & star_shift_t1(11 downto 10) & "00");

@@ -8,7 +8,9 @@ set_global_assignment -name VHDL_FILE rtl/cpu/T80.vhd
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
 set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
+set_global_assignment -name VHDL_FILE rtl/moonwar_dial.vhd
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
+set_global_assignment -name VHDL_FILE rtl/scramble_pack.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble.vhd

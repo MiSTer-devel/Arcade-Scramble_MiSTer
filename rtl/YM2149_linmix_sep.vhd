@@ -393,69 +393,70 @@ begin
         -- 1 1 1 0  /\/\
         --
         -- 1 1 1 1  /___
-    if (env_reset = '1') then
-      -- load initial state
-      if (reg(13)(2) = '0') then -- attack
-        env_vol <= "11111";
-        env_inc <= '0'; -- -1
-      else
-        env_vol <= "00000";
-        env_inc <= '1'; -- +1
-      end if;
-      env_hold <= '0';
+    if rising_edge(CLK) then
+		if (env_reset = '1') then
+			-- load initial state
+			if (reg(13)(2) = '0') then -- attack
+			  env_vol <= "11111";
+			  env_inc <= '0'; -- -1
+			else
+			  env_vol <= "00000";
+			  env_inc <= '1'; -- +1
+			end if;
+			env_hold <= '0';
+		else
+			is_bot    := (env_vol = "00000");
+			is_bot_p1 := (env_vol = "00001");
+			is_top_m1 := (env_vol = "11110");
+			is_top    := (env_vol = "11111");
 
-    elsif rising_edge(CLK) then
-      is_bot    := (env_vol = "00000");
-      is_bot_p1 := (env_vol = "00001");
-      is_top_m1 := (env_vol = "11110");
-      is_top    := (env_vol = "11111");
+			if (ENA = '1') then
+			  if (env_ena = '1') then
+				 if (env_hold = '0') then
+					if (env_inc = '1') then
+					  env_vol <= (env_vol + "00001");
+					else
+					  env_vol <= (env_vol + "11111");
+					end if;
+				 end if;
 
-      if (ENA = '1') then
-        if (env_ena = '1') then
-          if (env_hold = '0') then
-            if (env_inc = '1') then
-              env_vol <= (env_vol + "00001");
-            else
-              env_vol <= (env_vol + "11111");
-            end if;
-          end if;
+				 -- envelope shape control.
+				 if (reg(13)(3) = '0') then
+					if (env_inc = '0') then -- down
+					  if is_bot_p1 then env_hold <= '1'; end if;
+					else
+					  if is_top then env_hold <= '1'; end if;
+					end if;
+				 else
+					if (reg(13)(0) = '1') then -- hold = 1
+					  if (env_inc = '0') then -- down
+						 if (reg(13)(1) = '1') then -- alt
+							if is_bot    then env_hold <= '1'; end if;
+						 else
+							if is_bot_p1 then env_hold <= '1'; end if;
+						 end if;
+					  else
+						 if (reg(13)(1) = '1') then -- alt
+							if is_top    then env_hold <= '1'; end if;
+						 else
+							if is_top_m1 then env_hold <= '1'; end if;
+						 end if;
+					  end if;
 
-          -- envelope shape control.
-          if (reg(13)(3) = '0') then
-            if (env_inc = '0') then -- down
-              if is_bot_p1 then env_hold <= '1'; end if;
-            else
-              if is_top then env_hold <= '1'; end if;
-            end if;
-          else
-            if (reg(13)(0) = '1') then -- hold = 1
-              if (env_inc = '0') then -- down
-                if (reg(13)(1) = '1') then -- alt
-                  if is_bot    then env_hold <= '1'; end if;
-                else
-                  if is_bot_p1 then env_hold <= '1'; end if;
-                end if;
-              else
-                if (reg(13)(1) = '1') then -- alt
-                  if is_top    then env_hold <= '1'; end if;
-                else
-                  if is_top_m1 then env_hold <= '1'; end if;
-                end if;
-              end if;
+					elsif (reg(13)(1) = '1') then -- alternate
+					  if (env_inc = '0') then -- down
+						 if is_bot_p1 then env_hold <= '1'; end if;
+						 if is_bot    then env_hold <= '0'; env_inc <= '1'; end if;
+					  else
+						 if is_top_m1 then env_hold <= '1'; end if;
+						 if is_top    then env_hold <= '0'; env_inc <= '0'; end if;
+					  end if;
+					end if;
 
-            elsif (reg(13)(1) = '1') then -- alternate
-              if (env_inc = '0') then -- down
-                if is_bot_p1 then env_hold <= '1'; end if;
-                if is_bot    then env_hold <= '0'; env_inc <= '1'; end if;
-              else
-                if is_top_m1 then env_hold <= '1'; end if;
-                if is_top    then env_hold <= '0'; env_inc <= '0'; end if;
-              end if;
-            end if;
-
-          end if;
-        end if;
-      end if;
+				 end if;
+			  end if;
+			end if;
+		end if;
     end if;
   end process;
 
