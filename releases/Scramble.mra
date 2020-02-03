@@ -44,8 +44,8 @@
 		<part crc="de7912da" name="ot2.5d"/>
 		<part crc="ba2fa933" name="ot3.5e"/>
 		<part crc="ba2fa933" name="ot3.5e"/>
-		<part crc="516e029e" repeat="4" name="c1.5h"/>
-		<part crc="5f30311a" repeat="4" name="c2.5f"/>
+		<part crc="516e029e" repeat="4" name="5h"/>
+		<part crc="5f30311a" repeat="4" name="5f"/>
 		<part crc="4e3caeab" name="c01s.6e"/>
 	</rom>
 </misterromdescription>

@@ -49,6 +49,7 @@ library ieee;
 entity SCRAMBLE_VIDEO is
   port (
     I_HWSEL               : in  integer;
+    I_GALAXIAN            : in  std_logic;
     --
     I_HCNT                : in  std_logic_vector(8 downto 0);
     I_VCNT                : in  std_logic_vector(8 downto 0);
@@ -124,6 +125,7 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal cntr_clr             : std_logic;
   signal cntr_load            : std_logic;
   signal sld_l                : std_logic;
+  signal mld_l                : std_logic;
 
   -- video ram
   signal vram_addr_sum        : std_logic_vector(8 downto 0); -- extra bit for debug
@@ -171,7 +173,15 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal shell_ena            : std_logic;
   signal shell                : std_logic;
   signal shell_reg            : std_logic;
+  -- missile
+  signal missile_cnt          : std_logic_vector(7 downto 0);
+  signal missile_ena          : std_logic;
+  signal missile              : std_logic;
+  signal missile_reg          : std_logic;
   -- stars
+  signal star_r               : std_logic_vector(1 downto 0);
+  signal star_g               : std_logic_vector(1 downto 0);
+  signal star_b               : std_logic_vector(1 downto 0);
   signal star_reg_1           : std_logic;
   signal star_reg_2           : std_logic;
   signal star_cnt_div         : std_logic_vector(22 downto 0);
@@ -532,16 +542,28 @@ begin
     end if;
   end process;
 
-  p_shell_ld : process(ld, h256, I_HCNT, missile_reg_l)
-  begin
-    sld_l <= '1';
-    if (ld = '1') and (h256 = '1') and (I_HCNT(3) = '1') then
-      if (missile_reg_l = '0') and (I_HCNT(6 downto 4) /= "111") then
-        sld_l <= '0';
-      end if;
-    end if;
-
-  end process;
+	p_shell_ld : process(ld, h256, I_HCNT, missile_reg_l, I_GALAXIAN)
+	begin
+		sld_l <= '1';
+		mld_l <= '1';
+		if I_GALAXIAN = '1' then
+			if (ld = '1') and (h256 = '1') and (I_HCNT(3) = '1') then --4D:Y3
+				if (missile_reg_l = '0') and (I_HCNT(6 downto 3) /= "1111") then -- tweak to mimic galaxian hw !
+					sld_l <= '0';
+				end if;
+  
+				if (missile_reg_l = '0') and (I_HCNT(6 downto 3) = "1111") then  -- tweak to mimic galaxian hw !
+					mld_l <= '0';
+				end if;
+			end if;
+		else
+			if (ld = '1') and (h256 = '1') and (I_HCNT(3) = '1') then
+				if (missile_reg_l = '0') and (I_HCNT(6 downto 4) /= "111") then
+					sld_l <= '0';
+				end if;
+			end if;
+		end if;
+	end process;
 
   p_shell_reg : process
   begin
@@ -558,20 +580,52 @@ begin
 
       if (sld_l = '0') then
         shell_ena <= '1';
-      elsif (shell = '1') then
+      elsif (shell_cnt = "11111110" and I_GALAXIAN = '1') or (shell = '1' and I_GALAXIAN = '0') then
         shell_ena <= '0';
       end if;
     end if;
   end process;
 
-  p_shell_op : process(shell_cnt, shell_ena)
+  p_shell_op : process(shell_cnt, shell_ena, I_GALAXIAN)
   begin
     -- note how T input is from QD on the bottom counter
     -- we get a rc from xF8 to XFF
     -- so the shell is set at count xFA (rc and bit 1)
     shell <= '0';
-    if (shell_cnt = x"F8") then -- minus 2 as delay wrong
+    if (shell_cnt > x"F8" and I_GALAXIAN = '1') or (shell_cnt = x"F8" and I_GALAXIAN = '0') then -- minus 2 as delay wrong
       shell <= shell_ena;
+    end if;
+  end process;
+
+  p_missile_reg : process
+  begin
+    wait until rising_edge(CLK);
+    if (ENA = '1') then
+
+      if (mld_l = '0') then
+        missile_cnt <= hpla;
+      elsif (cblank_l = '1') then
+        missile_cnt <= missile_cnt + "1";
+      else
+        missile_cnt <= missile_cnt;
+      end if;
+
+      if (mld_l = '0') then
+        missile_ena <= '1';
+      elsif (missile_cnt = "11111110") then
+        missile_ena <= '0';
+      end if;
+    end if;
+  end process;
+
+  p_missile_op : process(missile_cnt, missile_ena)
+  begin
+    -- note how T input is from QD on the bottom counter
+    -- we get a rc from xF8 to XFF
+    -- so the shell is set at count xFA (rc and bit 1)
+    missile <= '0';
+    if (missile_cnt > x"F8") then -- minus 2 as delay wrong
+      missile <= missile_ena;
     end if;
   end process;
 
@@ -660,6 +714,7 @@ begin
         vidout_l <= not(vid(1) or vid(0));
         -- probably wider than the original, we must be a whole 6MHz clock here or the scan-doubler will loose it.
         shell_reg <= shell;
+        missile_reg <= missile;
         frogger_blue_out_reg <= frogger_blue;
 
         star_out_reg <= '0';
@@ -697,23 +752,33 @@ begin
   begin
     wait until rising_edge(CLK);
     if (ENA = '1') then
-      video(0)(4) := '0';
-      video(1)(4) := '0';
-      video(2)(4) := '0';
-      video(0)(3) := '0'; -- b
-      video(1)(3) := '0'; -- g
-      video(2)(3) := '0'; -- r
+      video := (others => (others => '0'));
+
+      -- add stars, background and video
+      if I_HWSEL /= I_HWSEL_FROGGER then
+			if I_GALAXIAN = '1' then
+				video(0) := video(0) + ( '0' & star_b & "00");
+				video(1) := video(1) + ( '0' & star_g & "00");
+				video(2) := video(2) + ( '0' & star_r & "00");
+			else
+				if (star_out_reg = '1') and (vidout_l = '1') then
+					video(0) := video(0) + ( '0' & star_shift_t1(13 downto 12) & "00");
+					video(1) := video(1) + ( '0' & star_shift_t1(11 downto 10) & "00");
+					video(2) := video(2) + ( '0' & star_shift_t1( 9 downto  8) & "00");
+				end if;
+			end if;
+
+        if (pout1_reg = '1') and (vidout_l = '1') then
+          video(0) := video(0) + ("00011");
+        end if;
+      end if;
 
       if (vidout_l = '0') then -- cs_l on col rom
-
-        video(0)(2 downto 0) := obj_lut_out(7 downto 6) & '0';
-        video(1)(2 downto 0) := obj_lut_out(5 downto 3);
-        video(2)(2 downto 0) := obj_lut_out(2 downto 0);
-      else
-        video(0)(2 downto 0) := "000";
-        video(1)(2 downto 0) := "000";
-        video(2)(2 downto 0) := "000";
+        video(0) := "00" & obj_lut_out(7 downto 6) & '0';
+        video(1) := "00" & obj_lut_out(5 downto 3);
+        video(2) := "00" & obj_lut_out(2 downto 0);
       end if;
+
       --
       -- end of direct assigns
       --
@@ -728,17 +793,9 @@ begin
         video(2) := video(2) + ("00" & shell_reg & "00");
       end if;
 
-      -- add stars, background and video
-      if I_HWSEL /= I_HWSEL_FROGGER then
-        if (star_out_reg = '1') and (vidout_l = '1') then
-          video(0) := video(0) + ( '0' & star_shift_t1(13 downto 12) & "00");
-          video(1) := video(1) + ( '0' & star_shift_t1(11 downto 10) & "00");
-          video(2) := video(2) + ( '0' & star_shift_t1( 9 downto  8) & "00");
-        end if;
-
-        if (pout1_reg = '1') and (vidout_l = '1') then
-          video(0) := video(0) + ("00011");
-        end if;
+      if I_GALAXIAN = '1' then
+			video(0) := video(0) + ("00" & missile_reg & "00");
+			video(2) := video(2) + ("00" & missile_reg & "00");
       end if;
       -- check for clip
       for i in 0 to 2 loop
@@ -752,6 +809,21 @@ begin
       O_VIDEO_R <= video(2)(2 downto 0) & video(2)(2);
     end if;
   end process;
+
+	stars : work.MC_STARS
+	port map (
+		I_CLK     => CLK,
+		I_H_FLIP  => I_HCMA,
+		I_V_SYNC  => I_VSYNC,
+		I_8HF     => I_HCNT(3),
+		I_256HnX  => h256_l,
+		I_1VF     => I_VCNT(0),
+		I_STARSON => I_STARSON,
+
+		O_RGB(1 downto 0) => star_r,
+		O_RGB(3 downto 2) => star_g,
+		O_RGB(5 downto 4) => star_b
+	);
 
   p_frogger_blue_reg : process
   begin
@@ -822,4 +894,85 @@ begin
     end if;
   end process;
 
+end RTL;
+
+------------------------------------------------------------------------------
+-- FPGA STARS
+--
+-- Version : 2.00
+--
+-- Copyright(c) 2004 Katsumi Degawa , All rights reserved
+--
+-- Important !
+--
+-- This program is freeware for non-commercial use.
+-- The author does not guarantee this program.
+-- You can use this at your own risk.
+--
+------------------------------------------------------------------------------
+library ieee;
+	use ieee.std_logic_1164.all;
+	use ieee.numeric_std.all;
+
+entity MC_STARS is
+	port (
+		I_CLK         : in  std_logic;
+		I_H_FLIP      : in  std_logic;
+		I_V_SYNC      : in  std_logic;
+		I_8HF         : in  std_logic;
+		I_256HnX      : in  std_logic;
+		I_1VF         : in  std_logic;
+		I_STARSON     : in  std_logic;
+
+		O_RGB         : out std_logic_vector(5 downto 0)
+	);
+end;
+
+architecture RTL of MC_STARS is
+	signal CLK_1C    : std_logic := '0';
+	signal CLK_1C_r  : std_logic := '0';
+	signal W_2D_Qn   : std_logic := '0';
+	signal CLK_1AB   : std_logic := '0';
+	signal CLK_1AB_r : std_logic := '0';
+	signal W_1AB_Q   : std_logic_vector(15 downto 0) := (others => '0');
+	signal W_1C_Q    : std_logic := '0';
+	signal DIV       : unsigned( 1 downto 0);
+begin
+	O_RGB <= W_1AB_Q(13 downto 8) when (W_1AB_Q(7 downto 0) = x"ff") and ((I_8HF xor I_1VF) and W_2D_Qn and I_256HnX) = '1' else (others => '0');
+
+	CLK_1C  <= not (DIV(0) and (not DIV(1) )and (not I_V_SYNC) and I_256HnX);
+	CLK_1AB <= not (CLK_1C or (not (I_H_FLIP or W_1C_Q)));
+
+	process(I_CLK)
+	begin
+		if rising_edge(I_CLK) then
+			CLK_1C_r <= CLK_1C;
+			CLK_1AB_r <= CLK_1AB;
+			DIV <= DIV + 1;
+		end if;
+	end process;
+
+	process(I_CLK, I_V_SYNC)
+	begin
+		if(I_V_SYNC = '1') then
+			W_1C_Q <= '0';
+		elsif rising_edge(I_CLK) then
+			if CLK_1C_r = '0' and CLK_1C = '1' then
+				W_1C_Q <= '1';
+			end if;
+		end if;
+	end process;
+
+	process(I_CLK, I_STARSON)
+	begin
+		if(I_STARSON = '0') then
+			W_1AB_Q <= (others => '0');
+			W_2D_Qn <= '1';
+		elsif rising_edge(I_CLK) then
+			if CLK_1AB_r = '0' and CLK_1AB = '1' then
+				W_1AB_Q <= W_1AB_Q(14 downto 0) & (W_2D_Qn xor W_1AB_Q(4));
+				W_2D_Qn <= not W_1AB_Q(15);
+			end if;
+		end if;
+	end process;
 end RTL;

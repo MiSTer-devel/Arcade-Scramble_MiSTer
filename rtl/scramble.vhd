@@ -49,6 +49,7 @@ library ieee;
 entity SCRAMBLE is
   port (
     I_HWSEL               : in    integer;
+    I_GALAXIAN_VIDEO      : in    std_logic;
     --
     O_VIDEO_R             : out   std_logic_vector(3 downto 0);
     O_VIDEO_G             : out   std_logic_vector(3 downto 0);
@@ -234,6 +235,7 @@ begin
   u_video : entity work.SCRAMBLE_VIDEO
     port map (
       I_HWSEL         => I_HWSEL,
+      I_GALAXIAN      => I_GALAXIAN_VIDEO,
       --
       I_HCNT          => hcnt,
       I_VCNT          => vcnt,

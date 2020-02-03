@@ -124,7 +124,7 @@ pll pll
 
 
 reg ce_6p, ce_6n, ce_12, ce_1p79;
-always @(negedge clk_sys) begin
+always @(posedge clk_sys) begin
 	reg [1:0] div = 0;
 	reg [3:0] div179 = 0;
 	
@@ -289,6 +289,7 @@ localparam mod_calipso  = 8;
 localparam mod_darkplnt = 9;
 localparam mod_anteater = 10;
 localparam mod_losttomb = 11;
+localparam mod_theend   = 12;
 
 reg [7:0] mod = 0;
 always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
@@ -297,12 +298,14 @@ always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
 reg [7:0] sw[8];
 always @(posedge clk_sys) if (ioctl_wr && (ioctl_index==254) && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout; 
 
+reg       galaxian_video;
 reg [7:0] hwsel;
 reg [7:0] input0;
 reg [7:0] input1;
 reg [7:0] input2;
 
 always @(*) begin
+	galaxian_video = 0;
 	hwsel  = 0;
 	input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_a, 1'b0, m_fire_b, m_up };
 	input1 = ~{ m_start1, m_start2, m_left, m_right, m_fire_a, m_fire_b, 2'b00 };
@@ -371,6 +374,10 @@ always @(*) begin
 				input1 = ~{ 1'b0, m_fire_a, m_left, m_right, m_down, m_up, 2'b00 };
 				input2 = 8'hFF;
 			end
+		mod_theend:
+			begin
+				galaxian_video = 1;
+			end
 		default:;
 	endcase
 end
@@ -435,6 +442,7 @@ scramble_top scramble
 	.O_AUDIO(audio),
 
 	.I_HWSEL(hwsel),
+	.I_GALAXIAN_VIDEO(galaxian_video),
 	.I_PA(sw[0] & input0),
 	.I_PB(sw[1] & input1),
 	.I_PC(sw[2] & input2),

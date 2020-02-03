@@ -21,7 +21,7 @@
 	<rom index="1">
 		<part>00</part>
 	</rom>  
-	<rom index="0" zip="atlantis.zip|atlantis2.zip" md5="none" type="merged|split">
+	<rom index="0" zip="atlantis.zip|atlantis2.zip" md5="1d8a2fa44f0d00e80d1272f2cab74467" type="merged|split">
 		<part crc="ad348089" name="atlantis2/boa_1.2c"/>
 		<part crc="caa705d1" name="atlantis2/boa_2.2e"/>
 		<part crc="ac5e9ec1" name="atlantis2/boa_3.2f"/>

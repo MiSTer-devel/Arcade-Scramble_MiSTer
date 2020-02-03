@@ -63,6 +63,7 @@ port (
 	I_PC             : in  std_logic_vector(7 downto 0);
 
 	I_HWSEL          : in  integer;
+	I_GALAXIAN_VIDEO : in  std_logic;
 
 	RESET            : in  std_logic;
 	clk              : in  std_logic; -- 25
@@ -94,6 +95,7 @@ begin
 u_scramble : entity work.SCRAMBLE
 port map (
 	I_HWSEL               => I_HWSEL,
+	I_GALAXIAN_VIDEO      => I_GALAXIAN_VIDEO,
 	--
 	O_VIDEO_R             => O_VIDEO_R,
 	O_VIDEO_G             => O_VIDEO_G,
