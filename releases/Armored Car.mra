@@ -1,0 +1,41 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Armored Car</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>armorcar</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin" default="A,B,Start,Select,R"/>
+	<switches default="FF,FD,FB">
+		<dip bits="8"     name="Lives" ids="5,3"/>
+		<dip bits="9"     name="Demo Sounds" ids="On,Off"/>
+		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
+		<dip bits="19"    name="Cabinet" ids="Cocktail,Upright"/>
+	</switches>
+	<rom index="1">
+		<part>05</part>
+	</rom>  
+	<rom index="0" zip="armorcar.zip" md5="91978b62c4569dcdf0aed9c7adab4316" type="merged|nonmerged">
+		<part crc="0d7bfdfb" name="cpu.2c"/>
+		<part crc="76463213" name="cpu.2e"/>
+		<part crc="2cc6d5f0" name="cpu.2f"/>
+		<part crc="61278dbb" name="cpu.2h"/>
+		<part crc="fb158d8c" name="cpu.2j"/>
+		<part crc="0d7bfdfb" name="cpu.2c"/>
+		<part crc="76463213" name="cpu.2e"/>
+		<part crc="2cc6d5f0" name="cpu.2f"/>
+		<part crc="54ee7753" name="sound.5c"/>
+		<part crc="5218fec0" name="sound.5d"/>
+		<part crc="54ee7753" name="sound.5c"/>
+		<part crc="5218fec0" name="sound.5d"/>
+		<part crc="85bdb113" repeat="4" name="cpu.5h"/>
+		<part crc="8a3da4d1" repeat="4" name="cpu.5f"/>
+		<part crc="9b87f90d" name="82s123.6e"/>
+	</rom>
+</misterromdescription>

@@ -10,7 +10,6 @@
 	<rbf>scramble</rbf>
 	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
 	<switches default="FF,FC,F1">
-		<dip bits="2"     name="Service" ids="On,Off"/>
 		<dip bits="8,9"   name="Lives" ids="3,4,5,256(Cheat)"/>
 		<dip bits="17,18" name="Coinage" ids="1c/1cr,2c/1cr,3c/1cr,1c/2cr"/>
 		<dip bits="19"    name="Cabinet" ids="Upright,Cocktail"/>

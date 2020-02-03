@@ -1,0 +1,40 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Anteater</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>anteater</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Retract,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<switches default="FF,FD,FB">
+		<dip bits="8"     name="Lives" ids="5,3"/>
+		<dip bits="9"     name="Demo Sounds" ids="On,Off"/>
+		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
+	</switches>
+	<rom index="1">
+		<part>0A</part>
+	</rom>  
+	<rom index="0" zip="anteater.zip" md5="d2a81675f550dc7a17fde92b89b53c3c" type="merged|nonmerged">
+		<part crc="58bc9393" name="ra1-2c"/>
+		<part crc="574fc6f6" name="ra1-2e"/>
+		<part crc="2f7c1fe5" name="ra1-2f"/>
+		<part crc="ae8a5da3" name="ra1-2h"/>
+		<part crc="58bc9393" name="ra1-2c"/>
+		<part crc="574fc6f6" name="ra1-2e"/>
+		<part crc="2f7c1fe5" name="ra1-2f"/>
+		<part crc="ae8a5da3" name="ra1-2h"/>
+		<part crc="87300b4f" name="ra4-5c"/>
+		<part crc="af4e5ffe" name="ra4-5d"/>
+		<part crc="87300b4f" name="ra4-5c"/>
+		<part crc="af4e5ffe" name="ra4-5d"/>
+		<part crc="b30c7c9f" repeat="4" name="ra6-5h"/>
+		<part crc="4c3f8a08" repeat="4" name="ra6-5f"/>
+		<part crc="fce333c7" name="colr6f.cpu"/>
+	</rom>
+</misterromdescription>

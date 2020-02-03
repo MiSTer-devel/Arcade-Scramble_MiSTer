@@ -102,6 +102,8 @@ localparam CONF_STR = {
 	"H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
+	"h1O6,Rotation,Buttons,Spinner;",
+	"h1-;",
 	"DIP;",
 	"-;",
 	"R0,Reset;",
@@ -173,7 +175,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask(direct_video),
+	.status_menumask({mod == mod_moonwar,direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
@@ -324,7 +326,7 @@ always @(*) begin
 			begin
 				hwsel = 2;
 				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_fire_a, m_fire_b };
-				input1 = ~{ m_fire_a, m_fire_b, m_left, m_right, m_up, m_down, 2'b00 };
+				input1 = 8'hFF;
 				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
 			end
 		mod_armorcar:
@@ -363,8 +365,8 @@ always @(*) begin
 		mod_anteater:
 			begin
 				hwsel = 5;
-				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_fire_a, m_fire_b };
-				input1 = ~{ m_fire_a, m_fire_b, m_left, m_right, m_up, m_down, 2'b00 };
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_fire_a };
+				input1 = ~{ 1'b0, m_fire_a, m_left, m_right, m_up, m_down, 2'b00 };
 				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
 			end
 		mod_losttomb:
@@ -387,6 +389,7 @@ moonwar_dial moonwar_dial (
 	.clk(clk_sys),
 	.moveleft(m_left | m_up),
 	.moveright(m_right | m_down),
+	.use_spinner(status[6]),
 	.dialout(dial)
 );
 

@@ -1,0 +1,40 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Lost Tomb</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>losttomb</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<switches default="FF,FD,F3">
+		<dip bits="8,9"   name="Lives" ids="Invulnerable,3,5,Free Play"/>
+		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
+		<dip bits="19"    name="Demo Sounds" ids="On,Off"/>
+	</switches>
+	<rom index="1">
+		<part>0B</part>
+	</rom>  
+	<rom index="0" zip="losttomb.zip" md5="7c80a19ed35478aa081af85d1c464345" type="merged|nonmerged">
+		<part crc="d6176d2c" name="2c"/>
+		<part crc="a5f55f4a" name="2e"/>
+		<part crc="0169fa3c" name="2f"/>
+		<part crc="054481b6" name="2h-easy"/>
+		<part crc="249ee040" name="2j"/>
+		<part crc="c7d2e608" name="2l"/>
+		<part crc="bc4bc5b1" name="2m"/>
+		<part crc="bc4bc5b1" name="2m"/>
+		<part crc="b899be2a" name="5c"/>
+		<part crc="6907af31" name="5d"/>
+		<part crc="b899be2a" name="5c"/>
+		<part crc="6907af31" name="5d"/>
+		<part crc="5581de5f" repeat="4" name="5h"/>
+		<part crc="61f137e7" repeat="4" name="5f"/>
+		<part crc="1108b816" name="ltprom"/>
+	</rom>
+</misterromdescription>

@@ -1,0 +1,41 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Speed Coin</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>spdcoin</setname>
+	<rbf>scramble</rbf>
+	<buttons names="-,-,-,-,Start 1P,Start 2P,Coin" default="Start,Select,R"/>
+	<switches default="FF,FC,FB">
+		<dip bits="8"     name="Freeze" ids="Off,On"/>
+		<dip bits="9"     name="Free Play" ids="Off,On"/>
+		<dip bits="18"    name="Difficulty" ids="Easy,Hard"/>
+		<dip bits="19"    name="Lives" ids="5,3"/>
+	</switches>
+	<rom index="1">
+		<part>07</part>
+	</rom>  
+	<rom index="0" zip="spdcoin.zip" md5="e891aac7470fccbcf673dc079a8694b5" type="merged|nonmerged">
+		<part crc="65cf1e49" name="spdcoin.2c"/>
+		<part crc="1ee59232" name="spdcoin.2e"/>
+		<part crc="65cf1e49" name="spdcoin.2c"/>
+		<part crc="1ee59232" name="spdcoin.2e"/>
+		<part crc="65cf1e49" name="spdcoin.2c"/>
+		<part crc="1ee59232" name="spdcoin.2e"/>
+		<part crc="65cf1e49" name="spdcoin.2c"/>
+		<part crc="1ee59232" name="spdcoin.2e"/>
+		<part crc="b4cf64b7" name="spdcoin.5c"/>
+		<part crc="92304df0" name="spdcoin.5d"/>
+		<part crc="b4cf64b7" name="spdcoin.5c"/>
+		<part crc="92304df0" name="spdcoin.5d"/>
+		<part crc="ab1fe81b" repeat="4" name="spdcoin.5h"/>
+		<part crc="dd5f1dbc" repeat="4" name="spdcoin.5f"/>
+		<part crc="1a2ccc56" name="spdcoin.clr"/>
+	</rom>
+</misterromdescription>

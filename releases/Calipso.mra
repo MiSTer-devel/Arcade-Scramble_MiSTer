@@ -1,0 +1,40 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Calipso</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>calipso</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<switches default="FF,FD,FB">
+		<dip bits="8"     name="Lives" ids="5,3"/>
+		<dip bits="9"     name="Demo Sounds" ids="On,Off"/>
+		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
+	</switches>
+	<rom index="1">
+		<part>08</part>
+	</rom>  
+	<rom index="0" zip="calipso.zip" md5="d9453cfeb923cd919335c6366605ce5f" type="merged|nonmerged">
+		<part crc="0fcb703c" name="calipso.2c"/>
+		<part crc="c6622f14" name="calipso.2e"/>
+		<part crc="7bacbaba" name="calipso.2f"/>
+		<part crc="a3a8111b" name="calipso.2h"/>
+		<part crc="fcbd7b9e" name="calipso.2j"/>
+		<part crc="f7630cab" name="calipso.2l"/>
+		<part crc="0fcb703c" name="calipso.2c"/>
+		<part crc="c6622f14" name="calipso.2e"/>
+		<part crc="9cbc65ab" name="calipso.5c"/>
+		<part crc="a225ee3b" name="calipso.5d"/>
+		<part crc="9cbc65ab" name="calipso.5c"/>
+		<part crc="a225ee3b" name="calipso.5d"/>
+		<part crc="1663a73a" name="calipso.5h"/>
+		<part crc="fd4252e9" name="calipso.5f"/>
+		<part crc="01165832" name="calipso.clr"/>
+	</rom>
+</misterromdescription>

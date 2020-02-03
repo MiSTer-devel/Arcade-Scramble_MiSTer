@@ -1,0 +1,40 @@
+<misterromdescription>
+	<remark>
+		prg    0000-7FFF
+		aud    8000-9FFF
+		obj0   A000-BFFF
+		obj1   C000-DFFF
+		col    E000-E01F
+	</remark>
+	<name>Moonwar</name>
+	<mameversion>0216</mameversion>
+	<mratimestamp>201911270000</mratimestamp>
+	<setname>moonwar</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Fire,Thrust,Shield,Hyperflip,Start 1P,Start 2P,Coin" default="A,B,X,Y,Start,Select,R"/>
+	<switches default="FF,FC,F3">
+		<dip bits="8,9"   name="Lives" ids="3,4,5,Free Play"/>
+		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
+		<dip bits="19"    name="Cabinet" ids="Upright,Cocktail"/>
+	</switches>
+	<rom index="1">
+		<part>06</part>
+	</rom>  
+	<rom index="0" zip="moonwar.zip" md5="f7699f6acfae08f5870fa4d28239060a" type="merged|nonmerged">
+		<part crc="7c11b4d9" name="mw2.2c"/>
+		<part crc="1b6362be" name="mw2.2e"/>
+		<part crc="4fd8ba4b" name="mw2.2f"/>
+		<part crc="56879f0d" name="mw2.2h"/>
+		<part crc="7c11b4d9" name="mw2.2c"/>
+		<part crc="1b6362be" name="mw2.2e"/>
+		<part crc="4fd8ba4b" name="mw2.2f"/>
+		<part crc="56879f0d" name="mw2.2h"/>
+		<part crc="c26231eb" name="moon_war_ii_ra20_5c.5c"/>
+		<part crc="bb48a646" name="moon_war_ii_ra20_5d.5d"/>
+		<part crc="c26231eb" name="moon_war_ii_ra20_5c.5c"/>
+		<part crc="bb48a646" name="moon_war_ii_ra20_5d.5d"/>
+		<part crc="a6ccc652" repeat="4" name="moon_war_ii_ra20_5h.5h"/>
+		<part crc="c5fa1aa0" repeat="4" name="moon_war_ii_ra20_5f.5f"/>
+		<part crc="99614c6c" name="moonwar_ii_color_6ea1.6e"/>
+	</rom>
+</misterromdescription>
