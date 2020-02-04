@@ -11,7 +11,7 @@
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>losttomb</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<buttons names="Fire Right,Fire Down,Fire Up,Fire Left,Start 1P/Bomb,Start 2P,Coin" default="A,B,X,Y,Start,Select,R"/>
 	<switches default="FF,FD,F3">
 		<dip bits="8,9"   name="Lives" ids="Invulnerable,3,5,Free Play"/>
 		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>

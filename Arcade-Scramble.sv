@@ -104,6 +104,8 @@ localparam CONF_STR = {
 	"-;",
 	"h1O6,Rotation,Buttons,Spinner;",
 	"h1-;",
+	"h2O6,Fire Mode,4-Way,Walk+Fire;",
+	"h2-;",
 	"DIP;",
 	"-;",
 	"R0,Reset;",
@@ -175,7 +177,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask({mod == mod_moonwar,direct_video}),
+	.status_menumask({mod == mod_losttomb,mod == mod_moonwar,direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
@@ -256,6 +258,7 @@ wire m_fire1a  = btn_fire1   | joy1[4];
 wire m_fire1b  = btn_fire2   | joy1[5];
 wire m_fire1c  = btn_fire3   | joy1[6];
 wire m_fire1d  = btn_fire4   | joy1[7];
+wire m_fire1e  =               joy1[8];
 
 wire m_up2     = btn_up_2    | joy2[3];
 wire m_down2   = btn_down_2  | joy2[2];
@@ -265,6 +268,7 @@ wire m_fire2a  = btn_fire1_2 | joy2[4];
 wire m_fire2b  = btn_fire2_2 | joy2[5];
 wire m_fire2c  = btn_fire3_2 | joy2[6];
 wire m_fire2d  = btn_fire4_2 | joy2[7];
+wire m_fire2e  =               joy2[8];
 
 wire m_up      = m_up1       | m_up2;
 wire m_down    = m_down1     | m_down2;
@@ -274,6 +278,7 @@ wire m_fire_a  = m_fire1a    | m_fire2a;
 wire m_fire_b  = m_fire1b    | m_fire2b;
 wire m_fire_c  = m_fire1c    | m_fire2c;
 wire m_fire_d  = m_fire1d    | m_fire2d;
+wire m_fire_e  = m_fire1e    | m_fire2e;
 
 wire m_start1  = btn_start_1 | joy[8];
 wire m_start2  = btn_start_2 | joy[9];
@@ -373,7 +378,9 @@ always @(*) begin
 			begin
 				hwsel = 6;
 				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_start1, m_start2 };
-				input1 = ~{ 1'b0, m_fire_a, m_left, m_right, m_down, m_up, 2'b00 };
+				input1 = status[6] ?
+				         ~{ 1'b0, m_fire_e|m_fire_a, m_left,   m_right,  m_down,   m_up,     2'b00 }:
+				         ~{ 1'b0, m_fire_e,          m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
 				input2 = 8'hFF;
 			end
 		mod_theend:
