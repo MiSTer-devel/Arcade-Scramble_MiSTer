@@ -48,9 +48,9 @@ library ieee;
 
 entity SCRAMBLE_TOP is
 port (
-	O_VIDEO_R        : out std_logic_vector(3 downto 0);
-	O_VIDEO_G        : out std_logic_vector(3 downto 0);
-	O_VIDEO_B        : out std_logic_vector(3 downto 0);
+	O_VIDEO_R        : out std_logic_vector(7 downto 0);
+	O_VIDEO_G        : out std_logic_vector(7 downto 0);
+	O_VIDEO_B        : out std_logic_vector(7 downto 0);
 	O_HSYNC          : out std_logic;
 	O_VSYNC          : out std_logic;
 	O_HBLANK         : out std_logic;
@@ -61,6 +61,7 @@ port (
 	I_PA             : in  std_logic_vector(7 downto 0);
 	I_PB             : in  std_logic_vector(7 downto 0);
 	I_PC             : in  std_logic_vector(7 downto 0);
+	I_PD             : in  std_logic_vector(7 downto 0);
 
 	I_HWSEL          : in  integer;
 	I_GALAXIAN_VIDEO : in  std_logic;
@@ -150,6 +151,7 @@ port map (
 	I_PA               => I_PA,
 	I_PB               => I_PB,
 	I_PC               => I_PC,
+	I_PD               => I_PD,
 	O_COIN_COUNTER     => open,
 	--
 	I_RESET_L          => audio_reset_l,

@@ -1,0 +1,41 @@
+<misterromdescription>
+    <name>Mars</name>
+	<setname>mars</setname>
+	<rbf>scramble</rbf>
+	<buttons names="R Right,R Down,R Up,R Left,Start 1P,Start 2P,Coin" default="A,B,X,Y,Start,Select,R"/>
+	<switches default="FF,FD,F9,FF">
+		<dip bits="9"  name="Coinage" ids="1c/1cr,2c/1cr"/>
+		<dip bits="17" name="Cabinet" ids="Upright,Cocktail"/>
+		<dip bits="19" name="Lives" ids="255(Cheat),3"/>
+	</switches>
+	<rom index="1">
+		<part>0D</part>
+	</rom>
+    <rom index="0" zip="mars.zip" md5="34264a2b1bc3e329f54f28a862386e40" type="merged|nonmerged">
+		<part crc="2f88892c" name="u26.3"/>
+		<part crc="9e6bcbf7" name="u56.4"/>
+		<part crc="df496e6e" name="u69.5"/>
+		<part crc="75f274bb" name="u98.6"/>
+		<part crc="497fd8d0" name="u114.7"/>
+		<part crc="3d4cd59f" name="u133.8"/>
+		<part crc="497fd8d0" name="u114.7"/>
+		<part crc="3d4cd59f" name="u133.8"/>
+		<part crc="2f88892c" name="u26.3"/>
+		<part crc="9e6bcbf7" name="u56.4"/>
+		<part crc="df496e6e" name="u69.5"/>
+		<part crc="75f274bb" name="u98.6"/>
+		<part crc="497fd8d0" name="u114.7"/>
+		<part crc="3d4cd59f" name="u133.8"/>
+		<part crc="497fd8d0" name="u114.7"/>
+		<part crc="3d4cd59f" name="u133.8"/>
+
+		<part crc="bb5968b9" name="u39.9"/>
+		<part crc="75fd7720" name="u51.10"/>
+		<part crc="72a492da" name="u78.11"/>
+		<part crc="72a492da" name="u78.11"/>
+
+		<part crc="c5dc627f" repeat="4" name="u101.2"/>
+		<part crc="279789d0" repeat="4" name="u72.1"/>
+		<part crc="4e3caeab" name="c01s.6e"/>
+    </rom>
+</misterromdescription>

@@ -1,0 +1,32 @@
+<misterromdescription>
+    <name>Strategy X</name>
+	<setname>mars</setname>
+	<rbf>scramble</rbf>
+	<buttons names="Fire,Turn Left,Turn Right,-,Start 1P,Start 2P,Coin" default="A,L,R,Start,Select,Y"/>
+	<switches default="FF,FC,F1,FF">
+		<dip bits="8,9"   name="Lives" ids="3,4,5,255(Cheat)"/>
+		<dip bits="17,18" name="Coinage" ids="1c/1cr,1c/2cr,1c/3cr,1c/4cr"/>
+	</switches>
+	<rom index="1">
+		<part>0E</part>
+	</rom>
+    <rom index="0" zip="stratgyx.zip" md5="044914d4aad97dd7d39b460b580a7faf" type="merged|nonmerged">
+		<part crc="eec01237" name="2c_1.bin"/>
+		<part crc="926cb2d5" name="2e_2.bin"/>
+		<part crc="849e2504" name="2f_3.bin"/>
+		<part crc="8a64069b" name="2h_4.bin"/>
+		<part crc="78b9b898" name="2j_5.bin"/>
+		<part crc="20bae414" name="2l_6.bin"/>
+		<part crc="20bae414" name="2l_6.bin"/>
+		<part crc="20bae414" name="2l_6.bin"/>
+
+		<part crc="713a5db8" name="s1.bin"/>
+		<part crc="46079411" name="s2.bin"/>
+
+		<part crc="d105ad91" repeat="4" name="5h_c1.bin"/>
+		<part crc="7121b679" repeat="4" name="5f_c2.bin"/>
+
+		<part crc="51a629e1" name="strategy.6e"/>
+		<part crc="d95c0318" name="strategy.10k"/>
+    </rom>
+</misterromdescription>

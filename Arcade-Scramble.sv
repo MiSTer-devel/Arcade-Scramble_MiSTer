@@ -92,20 +92,20 @@ assign LED_USER  = ioctl_download;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
-assign HDMI_ARX = status[1] ? 8'd16 : status[2] ? 8'd4 : 8'd3;
-assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd4;
+assign HDMI_ARX = status[1] ? 8'd16 : (status[2] | landscape) ? 8'd4 : 8'd3;
+assign HDMI_ARY = status[1] ? 8'd9  : (status[2] | landscape) ? 8'd3 : 8'd4;
 
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.SCRMBL;;",
 	"H0O1,Aspect Ratio,Original,Wide;",
-	"H0O2,Orientation,Vert,Horz;",
+	"H1H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
-	"h1O6,Rotation,Buttons,Spinner;",
-	"h1-;",
-	"h2O6,Fire Mode,4-Way,Walk+Fire;",
+	"h2O6,Rotation,Buttons,Spinner;",
 	"h2-;",
+	"h3O6,Fire Mode,4-Way,Move+Fire;",
+	"h3-;",
 	"DIP;",
 	"-;",
 	"R0,Reset;",
@@ -177,7 +177,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask({mod == mod_losttomb,mod == mod_moonwar,direct_video}),
+	.status_menumask({fourfire,has_spinner,landscape,direct_video}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
@@ -248,8 +248,6 @@ reg btn_fire2_2=0;
 reg btn_fire3_2=0;
 reg btn_fire4_2=0;
 
-wire no_rotate = status[2] | direct_video;
-
 wire m_up1     = btn_up      | joy1[3];
 wire m_down1   = btn_down    | joy1[2];
 wire m_left1   = btn_left    | joy1[1];
@@ -297,6 +295,12 @@ localparam mod_darkplnt = 9;
 localparam mod_anteater = 10;
 localparam mod_losttomb = 11;
 localparam mod_theend   = 12;
+localparam mod_mars     = 13;
+localparam mod_stratgyx = 14;
+localparam mod_turtles  = 15;
+localparam mod_minefld  = 16;
+localparam mod_rescue   = 17;
+localparam mod_mimonkey = 18;
 
 reg [7:0] mod = 0;
 always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
@@ -305,18 +309,26 @@ always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
 reg [7:0] sw[8];
 always @(posedge clk_sys) if (ioctl_wr && (ioctl_index==254) && !ioctl_addr[24:3]) sw[ioctl_addr[2:0]] <= ioctl_dout; 
 
+reg       landscape;
+reg       has_spinner;
+reg       fourfire;
 reg       galaxian_video;
 reg [7:0] hwsel;
 reg [7:0] input0;
 reg [7:0] input1;
 reg [7:0] input2;
+reg [7:0] input3;
 
 always @(*) begin
+	has_spinner = 0;
+	fourfire = 0;
+	landscape = 0;
 	galaxian_video = 0;
 	hwsel  = 0;
 	input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_a, 1'b0, m_fire_b, m_up };
 	input1 = ~{ m_start1, m_start2, m_left, m_right, m_fire_a, m_fire_b, 2'b00 };
 	input2 = ~{ 1'b0, m_down, 1'b0, m_up, 3'b000, m_down };
+	input3 = 8'hFF;
 
 	case (mod)
 		mod_frogger:
@@ -341,7 +353,8 @@ always @(*) begin
 		mod_moonwar:
 			begin
 				hwsel = 2;
-				input0 = ~{ m_coin, 1'b0, 1'b0, dial };
+				has_spinner = 1;
+				input0 = ~{ m_coin, 1'b0, 1'b0, moon_dial_dir, moon_dial[4:1] };
 				input1 = ~{ m_fire_a, m_fire_b, m_fire_c, m_fire_d, m_start2, m_start1, 2'b00 };
 				input2 = 8'hFF;
 			end
@@ -361,22 +374,24 @@ always @(*) begin
 			end
 		mod_darkplnt:
 			begin
-				// buggy
 				hwsel = 4;
+				landscape = 1;
+				has_spinner = 1;
 				input0 = ~{ m_coin, 1'b0, 3'b000, m_start2 | m_fire_b, m_start1 | m_fire_a, m_fire_c };
-				input1 = 8'hFF;
+				input1 = { darkplnt_dial, 2'b11 };
 				input2 = 8'hFF;
 			end
 		mod_anteater:
 			begin
-				hwsel = 5;
+				hwsel = 6;
 				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_fire_a };
 				input1 = ~{ 1'b0, m_fire_a, m_left, m_right, m_up, m_down, 2'b00 };
 				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
 			end
 		mod_losttomb:
 			begin
-				hwsel = 6;
+				hwsel = 7;
+				fourfire = 1;
 				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_start1, m_start2 };
 				input1 = status[6] ?
 				         ~{ 1'b0, m_fire_e|m_fire_a, m_left,   m_right,  m_down,   m_up,     2'b00 }:
@@ -387,24 +402,109 @@ always @(*) begin
 			begin
 				galaxian_video = 1;
 			end
+		mod_mars:
+			begin
+				hwsel = 10;
+				fourfire = 1;
+				if(status[6]) begin
+					input0 = ~{ m_coin, 1'b0, m_left, m_right, m_left, m_right, 1'b0, m_up };
+					input1 = ~{ m_start1, m_start2, m_left, m_right, m_left, m_right, 2'b00 };
+					input2 = ~{ m_up, m_down, m_down, m_up, 3'b000, m_down };
+					input3 = ~{ m_up, 1'b0, m_down, 5'b00000 };
+				end
+				else begin
+					input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_d, m_fire_a, 1'b0, m_up };
+					input1 = ~{ m_start1, m_start2, m_left, m_right, m_fire_d, m_fire_a, 2'b00 };
+					input2 = ~{ m_fire_c, m_down, m_fire_b, m_up, 3'b000, m_down };
+					input3 = ~{ m_fire_c, 1'b0, m_fire_b, 5'b00000 };
+				end
+			end
+		mod_stratgyx:
+			begin
+				hwsel = 5;
+				landscape = 1;
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_a, 1'b0, m_fire_b, m_up };
+				input1 = ~{ m_start1, m_start2, m_left, m_right, m_fire_a, m_fire_b, 2'b00 };
+				input2 = ~{ m_fire_c, m_down, m_fire_c, m_up, 3'b000, m_down };
+			end
+		mod_turtles:
+			begin
+				hwsel = 11;
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_a, 2'b00, m_up };
+				input1 = ~{ m_start1, m_start2, m_left, m_right, m_fire_a, 3'b000 };
+				input2 = ~{ 1'b0, m_down, 1'b0, m_up, 3'b000, m_down };
+			end
+		mod_minefld:
+			begin
+				hwsel = 8;
+				fourfire = 1;
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
+				input1 = status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : ~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
+				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
+			end
+		mod_rescue:
+			begin
+				hwsel = 9;
+				fourfire = 1;
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
+				input1 = status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : ~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
+				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
+			end
+		mod_mimonkey:
+			begin
+				hwsel = 12;
+			end
 		default:;
 	endcase
 end
 
-wire [4:0] dial;
-moonwar_dial moonwar_dial (
+wire [4:0] moon_dial;
+spinner #(1,2) moon_sp (
 	.clk(clk_sys),
-	.moveleft(m_left | m_up),
-	.moveright(m_right | m_down),
+	.fast(status[6]),
+	.plus(m_left|m_up|m_right|m_down),
+	.strobe(vs),
 	.use_spinner(status[6]),
-	.dialout(dial)
+	.spin_angle(moon_dial)
 );
 
+reg moon_dial_dir;
+always @(posedge clk_sys) begin
+	if(m_left|m_up)    moon_dial_dir <= 1;
+	if(m_right|m_down) moon_dial_dir <= 0;
+end
+
+wire [5:0] dp_remap[64] = 
+'{
+	6'h03, 6'h02, 6'h00, 6'h01, 6'h21, 6'h20, 6'h22, 6'h23,
+	6'h33, 6'h32, 6'h30, 6'h31, 6'h11, 6'h10, 6'h12, 6'h13,
+	6'h17, 6'h16, 6'h14, 6'h15, 6'h35, 6'h34, 6'h36, 6'h37,
+	6'h3f, 6'h3e, 6'h3c, 6'h3d, 6'h1d, 6'h1c, 6'h1e, 6'h1f,
+	6'h1b, 6'h1a, 6'h18, 6'h19, 6'h39, 6'h38, 6'h3a, 6'h3b,
+	6'h2b, 6'h2a, 6'h28, 6'h29, 6'h09, 6'h08, 6'h0a, 6'h0b,
+	6'h0f, 6'h0e, 6'h0c, 6'h0d, 6'h2d, 6'h2c, 6'h2e, 6'h2f,
+	6'h27, 6'h26, 6'h24, 6'h25, 6'h05, 6'h04, 6'h06, 6'h07 
+};
+
+wire [5:0] darkplnt_dial = dp_remap[dp_remap_addr];
+
+reg [5:0] dp_remap_addr;
+always @(posedge clk_sys) dp_remap_addr <= dp_dial;
+
+wire [5:0] dp_dial;
+spinner #(2,4) dp_sp (
+	.clk(clk_sys),
+	.fast(status[6]),
+	.minus(m_left | m_up),
+	.plus(m_right | m_down),
+	.strobe(vs),
+	.use_spinner(status[6]),
+	.spin_angle(dp_dial)
+);
 
 wire hblank, vblank;
 wire hs, vs;
-wire [3:0] r,g;
-wire [3:0] b;
+wire [7:0] r,g,b;
 
 reg ce_pix;
 always @(posedge clk_vid) begin
@@ -414,7 +514,9 @@ always @(posedge clk_vid) begin
 	ce_pix <= !div;
 end
 
-arcade_video #(256,224,12) arcade_video
+wire no_rotate = status[2] | direct_video | landscape;
+
+arcade_video #(256,224,24) arcade_video
 (
 	.*,
 
@@ -456,6 +558,7 @@ scramble_top scramble
 	.I_PA(sw[0] & input0),
 	.I_PB(sw[1] & input1),
 	.I_PC(sw[2] & input2),
+	.I_PD(sw[3] & input3),
 
 	.RESET(RESET | status[0] | buttons[1]),
 	.clk(clk_sys),

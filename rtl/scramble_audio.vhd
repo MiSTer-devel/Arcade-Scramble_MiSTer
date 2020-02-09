@@ -64,6 +64,7 @@ entity SCRAMBLE_AUDIO is
     I_PA               : in    std_logic_vector( 7 downto 0);
     I_PB               : in    std_logic_vector( 7 downto 0);
     I_PC               : in    std_logic_vector( 7 downto 0);
+    I_PD               : in    std_logic_vector( 7 downto 0);
     O_COIN_COUNTER     : out   std_logic;
     --
     I_RESET_L          : in    std_logic;
@@ -114,6 +115,7 @@ architecture RTL of SCRAMBLE_AUDIO is
   signal i8255_1D_cs_l      : std_logic;
   signal i8255_1D_pa_out    : std_logic_vector(7 downto 0);
   signal i8255_1D_pb_out    : std_logic_vector(7 downto 0);
+  signal i8255_1D_pc        : std_logic_vector(7 downto 0);
   --
   signal i8255_1E_data      : std_logic_vector(7 downto 0);
   signal i8255_1E_data_oe_l : std_logic;
@@ -365,7 +367,18 @@ begin
     i8255_1D_cs_l <= '1';
     i8255_1E_cs_l <= '1';
 
-    if I_HWSEL = I_HWSEL_DARKPLNT then
+    if I_HWSEL = I_HWSEL_TURTLES then
+        -- the interface one
+        if (I_ADDR(13 downto 11) = "111") and (I_ADDR(15) = '1') then
+          i8255_1D_cs_l <= '0';
+        end if;
+
+        -- the button one
+        if (I_ADDR(13 downto 11) = "110") and (I_ADDR(15) = '1') then
+          i8255_1E_cs_l <= '0';
+        end if;
+        i8255_addr <= I_ADDR(5 downto 4);
+    elsif I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
         -- the interface one
         if (I_ADDR(13 downto 11) = "101") and (I_ADDR(15) = '1') then
           i8255_1D_cs_l <= '0';
@@ -376,7 +389,8 @@ begin
           i8255_1E_cs_l <= '0';
         end if;
         i8255_addr <= I_ADDR(3 downto 2);
-    elsif I_HWSEL = I_HWSEL_SCOBRA or I_HWSEL = I_HWSEL_CALIPSO or I_HWSEL = I_HWSEL_ANTEATER or I_HWSEL = I_HWSEL_LOSTTOMB then
+    elsif I_HWSEL = I_HWSEL_SCOBRA or I_HWSEL = I_HWSEL_CALIPSO or I_HWSEL = I_HWSEL_ANTEATER or I_HWSEL = I_HWSEL_LOSTTOMB or
+          I_HWSEL = I_HWSEL_MINEFLD or I_HWSEL = I_HWSEL_RESCUE then
         -- the interface one
         if (I_ADDR(13 downto 11) = "100") and (I_ADDR(15) = '1') then
           i8255_1D_cs_l <= '0';
@@ -397,7 +411,18 @@ begin
       if (I_ADDR(8) = '1') and (I_ADDR(15) = '1') then
         i8255_1E_cs_l <= '0';
       end if;
-      i8255_addr <= I_ADDR(1 downto 0);
+
+      if I_HWSEL = I_HWSEL_MIMONKEY and I_ADDR(14) = '1' then
+        -- This is ROM access in mimonkeyscr
+        i8255_1D_cs_l <= '1';
+        i8255_1E_cs_l <= '1';
+      end if;
+
+      if I_HWSEL = I_HWSEL_MARS then
+        i8255_addr <= I_ADDR(3) & I_ADDR(1);
+      else
+        i8255_addr <= I_ADDR(1 downto 0);
+      end if;
     else
       -- the interface one
       if (I_ADDR(12) = '1') and (I_ADDR(15 downto 14) = "11") then
@@ -470,9 +495,17 @@ begin
   i8255_1E_pc <= I_PC when I_HWSEL = I_HWSEL_SCOBRA or 
                            I_HWSEL = I_HWSEL_CALIPSO or 
                            I_HWSEL = I_HWSEL_DARKPLNT or
+                           I_HWSEL = I_HWSEL_STRATGYX or
                            I_HWSEL = I_HWSEL_ANTEATER or
-                           I_HWSEL = I_HWSEL_LOSTTOMB
+                           I_HWSEL = I_HWSEL_LOSTTOMB or
+                           I_HWSEL = I_HWSEL_MARS or
+                           I_HWSEL = I_HWSEL_TURTLES or
+                           I_HWSEL = I_HWSEL_MINEFLD or
+                           I_HWSEL = I_HWSEL_RESCUE or
+                           I_HWSEL = I_HWSEL_MIMONKEY
                       else net_1e10_i & I_PC(6) & net_1e12_i & I_PC(4 downto 0);
+
+  i8255_1D_pc <= I_PD when I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_STRATGYX else xbo;
 
   O_COIN_COUNTER <= not I_IOPC7; -- open drain actually
 
@@ -498,7 +531,7 @@ begin
       O_PB              => i8255_1D_pb_out,
       O_PB_OE_L         => open,
 
-      I_PC              => xbo,
+      I_PC              => i8255_1D_pc,
       O_PC              => xb,
       O_PC_OE_L         => open,
 
