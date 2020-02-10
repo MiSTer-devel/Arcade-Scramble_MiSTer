@@ -173,6 +173,7 @@ wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
 wire  [7:0] ioctl_index;
+wire [15:0] sdram_sz;
 
 wire [10:0] ps2_key;
 
@@ -202,6 +203,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
 	.ioctl_index(ioctl_index),
+	.sdram_sz(sdram_sz),
 
 	.joystick_0(joy1),
 	.joystick_1(joy2),
@@ -532,7 +534,7 @@ arcade_video #(256,224,24) arcade_video
 
 	.clk_video(clk_vid),
 
-	.RGB_in(fg ? {r,g,b} : {bg_r,bg_g,bg_b}),
+	.RGB_in((fg && !bg_a) ? {r,g,b} : {bg_r,bg_g,bg_b}),
 	.HBlank(hblank),
 	.VBlank(vblank),
 	.HSync(hs),
@@ -586,11 +588,10 @@ always @(posedge clk_sys) if(ioctl_wr & ~ioctl_addr[0]) ioctl_dout_r <= ioctl_do
 wire [31:0] pic_data;
 sdram sdram
 (
-	.init(~pll_locked),
-	.clk(clk_mem),
-	
 	.*,
 
+	.init(~pll_locked),
+	.clk(clk_mem),
 	.ch1_addr(bg_download ? ioctl_addr[24:1] : pic_addr),
 	.ch1_dout(pic_data),
 	.ch1_din({ioctl_dout, ioctl_dout_r}),
@@ -600,16 +601,19 @@ sdram sdram
 
 reg        pic_req;
 reg [24:1] pic_addr;
-reg  [7:0] bg_r,bg_g,bg_b;
+reg  [7:0] bg_r,bg_g,bg_b,bg_a;
 always @(posedge clk_sys) begin
 	reg old_vs;
+	reg use_bg = 0;
+	
+	if(bg_download && sdram_sz[2:0]) use_bg <= 1;
 
 	pic_req <= 0;
 
-	if(mod == mod_darkplnt) begin
+	if(use_bg) begin
 		if(ce_pix) begin
 			old_vs <= vs;
-			{bg_b,bg_g,bg_r} <= pic_data[23:0];
+			{bg_a,bg_b,bg_g,bg_r} <= pic_data;
 			if(~(hblank|vblank)) begin
 				pic_addr <= pic_addr + 2'd2;
 				pic_req <= 1;
@@ -622,7 +626,7 @@ always @(posedge clk_sys) begin
 		end
 	end
 	else begin
-		{bg_b,bg_g,bg_r} <= 0;
+		{bg_a,bg_b,bg_g,bg_r} <= 0;
 	end
 end
 
