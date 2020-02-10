@@ -890,7 +890,7 @@ begin
          video(0) = "0000" and video(1) = "0000" and video(2) = "0000"
       then
         -- Minefield brown graduated background
-        O_VIDEO_B <= (others => '0');
+        O_VIDEO_B <= "00" & i_hcnt_adj(6 downto 1);
         O_VIDEO_G <= '0' & i_hcnt_adj(6 downto 0);
         O_VIDEO_R <= i_hcnt_adj(6 downto 0) & i_hcnt_adj(6);
       else
