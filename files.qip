@@ -1,4 +1,5 @@
 set_global_assignment -name QIP_FILE rtl/T80/T80.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
 set_global_assignment -name VHDL_FILE rtl/i82c55.vhd

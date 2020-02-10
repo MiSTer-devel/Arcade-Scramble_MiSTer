@@ -77,6 +77,19 @@ module emu
 	output [15:0] AUDIO_R,
 	output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
 	
+	//SDRAM interface with lower latency
+	output        SDRAM_CLK,
+	output        SDRAM_CKE,
+	output [12:0] SDRAM_A,
+	output  [1:0] SDRAM_BA,
+	inout  [15:0] SDRAM_DQ,
+	output        SDRAM_DQML,
+	output        SDRAM_DQMH,
+	output        SDRAM_nCS,
+	output        SDRAM_nCAS,
+	output        SDRAM_nRAS,
+	output        SDRAM_nWE,  
+
 	// Open-drain User port.
 	// 0 - D+/RX
 	// 1 - D-/TX
@@ -116,16 +129,18 @@ localparam CONF_STR = {
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys,clk_vid;
+wire clk_sys,clk_vid,clk_mem;
+wire pll_locked;
 
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
-	.outclk_0(clk_vid),
-	.outclk_1(clk_sys)
+	.outclk_0(clk_mem),
+	.outclk_1(clk_vid),
+	.outclk_2(clk_sys),
+	.locked(pll_locked)
 );
-
 
 reg ce_6p, ce_6n, ce_12, ce_1p79;
 always @(posedge clk_sys) begin
@@ -505,16 +520,11 @@ spinner #(2,4) dp_sp (
 wire hblank, vblank;
 wire hs, vs;
 wire [7:0] r,g,b;
-
-reg ce_pix;
-always @(posedge clk_vid) begin
-	reg [2:0] div;
-
-	div <= div + 1'd1;
-	ce_pix <= !div;
-end
+wire ce_pix = ce_6p;
 
 wire no_rotate = status[2] | direct_video | landscape;
+
+wire fg = |{r,g,b};
 
 arcade_video #(256,224,24) arcade_video
 (
@@ -522,7 +532,7 @@ arcade_video #(256,224,24) arcade_video
 
 	.clk_video(clk_vid),
 
-	.RGB_in({r,g,b}),
+	.RGB_in(fg ? {r,g,b} : {bg_r,bg_g,bg_b}),
 	.HBlank(hblank),
 	.VBlank(vblank),
 	.HSync(hs),
@@ -567,5 +577,53 @@ scramble_top scramble
 	.ena_6b(ce_6n),
 	.ena_1_79(ce_1p79)
 );
+
+wire bg_download = ioctl_download && (ioctl_index == 2);
+
+reg [7:0] ioctl_dout_r;
+always @(posedge clk_sys) if(ioctl_wr & ~ioctl_addr[0]) ioctl_dout_r <= ioctl_dout;
+
+wire [31:0] pic_data;
+sdram sdram
+(
+	.init(~pll_locked),
+	.clk(clk_mem),
+	
+	.*,
+
+	.ch1_addr(bg_download ? ioctl_addr[24:1] : pic_addr),
+	.ch1_dout(pic_data),
+	.ch1_din({ioctl_dout, ioctl_dout_r}),
+	.ch1_req(bg_download ? (ioctl_wr & ioctl_addr[0]) : pic_req),
+	.ch1_rnw(~bg_download)
+);
+
+reg        pic_req;
+reg [24:1] pic_addr;
+reg  [7:0] bg_r,bg_g,bg_b;
+always @(posedge clk_sys) begin
+	reg old_vs;
+
+	pic_req <= 0;
+
+	if(mod == mod_darkplnt) begin
+		if(ce_pix) begin
+			old_vs <= vs;
+			{bg_b,bg_g,bg_r} <= pic_data[23:0];
+			if(~(hblank|vblank)) begin
+				pic_addr <= pic_addr + 2'd2;
+				pic_req <= 1;
+			end
+			
+			if(~old_vs & vs) begin
+				pic_addr <= 0;
+				pic_req <= 1;
+			end
+		end
+	end
+	else begin
+		{bg_b,bg_g,bg_r} <= 0;
+	end
+end
 
 endmodule
