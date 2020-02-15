@@ -177,8 +177,8 @@ wire [15:0] sdram_sz;
 
 wire [10:0] ps2_key;
 
-wire [15:0] joy1,joy2;
-wire [15:0] joy = joy1 | joy2;
+wire [31:0] joy1,joy2;
+wire [31:0] joy = joy1 | joy2;
 
 wire [21:0] gamma_bus;
 
@@ -274,6 +274,8 @@ wire m_fire1b  = btn_fire2   | joy1[5];
 wire m_fire1c  = btn_fire3   | joy1[6];
 wire m_fire1d  = btn_fire4   | joy1[7];
 wire m_fire1e  =               joy1[8];
+wire m_spccw1  =               joy1[30];
+wire m_spcw1   =               joy1[31];
 
 wire m_up2     = btn_up_2    | joy2[3];
 wire m_down2   = btn_down_2  | joy2[2];
@@ -284,6 +286,8 @@ wire m_fire2b  = btn_fire2_2 | joy2[5];
 wire m_fire2c  = btn_fire3_2 | joy2[6];
 wire m_fire2d  = btn_fire4_2 | joy2[7];
 wire m_fire2e  =               joy2[8];
+wire m_spccw2  =               joy2[30];
+wire m_spcw2   =               joy2[31];
 
 wire m_up      = m_up1       | m_up2;
 wire m_down    = m_down1     | m_down2;
@@ -294,6 +298,8 @@ wire m_fire_b  = m_fire1b    | m_fire2b;
 wire m_fire_c  = m_fire1c    | m_fire2c;
 wire m_fire_d  = m_fire1d    | m_fire2d;
 wire m_fire_e  = m_fire1e    | m_fire2e;
+wire m_spccw   = m_spccw1    | m_spccw2;
+wire m_spcw    = m_spcw1     | m_spcw2;
 
 wire m_start1  = btn_start_1 | joy[8];
 wire m_start2  = btn_start_2 | joy[9];
@@ -478,17 +484,17 @@ end
 wire [4:0] moon_dial;
 spinner #(1,2) moon_sp (
 	.clk(clk_sys),
-	.fast(status[6]),
-	.plus(m_left|m_up|m_right|m_down),
+	.fast(status[6] | m_spccw | m_spcw),
+	.plus(m_left|m_up|m_right|m_down|m_spccw|m_spcw),
 	.strobe(vs),
-	.use_spinner(status[6]),
+	.use_spinner(status[6] | m_spccw | m_spcw),
 	.spin_angle(moon_dial)
 );
 
 reg moon_dial_dir;
 always @(posedge clk_sys) begin
-	if(m_left|m_up)    moon_dial_dir <= 1;
-	if(m_right|m_down) moon_dial_dir <= 0;
+	if(m_left|m_up|m_spccw)   moon_dial_dir <= 1;
+	if(m_right|m_down|m_spcw) moon_dial_dir <= 0;
 end
 
 wire [5:0] dp_remap[64] = 
@@ -511,11 +517,11 @@ always @(posedge clk_sys) dp_remap_addr <= dp_dial;
 wire [5:0] dp_dial;
 spinner #(2,4) dp_sp (
 	.clk(clk_sys),
-	.fast(status[6]),
-	.minus(m_left | m_up),
-	.plus(m_right | m_down),
+	.fast(status[6] | m_spccw | m_spcw),
+	.minus(m_left | m_up | m_spccw),
+	.plus(m_right | m_down | m_spcw),
 	.strobe(vs),
-	.use_spinner(status[6]),
+	.use_spinner(status[6] | m_spccw | m_spcw),
 	.spin_angle(dp_dial)
 );
 
