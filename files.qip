@@ -3,7 +3,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name VHDL_FILE rtl/dpram.vhd
 set_global_assignment -name VHDL_FILE rtl/MULT18X18.vhd
 set_global_assignment -name VHDL_FILE rtl/i82c55.vhd
-set_global_assignment -name VHDL_FILE rtl/spinner.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/spinner.sv
 set_global_assignment -name VHDL_FILE rtl/YM2149_linmix_sep.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_pack.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
