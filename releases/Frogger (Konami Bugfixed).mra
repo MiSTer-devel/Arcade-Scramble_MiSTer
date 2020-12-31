@@ -17,7 +17,7 @@
 	<rom index="1">
 		<part>02</part>
 	</rom>
-	<rom index="0" zip="frogger.zip|froggers2.zip" md5="none" type="merged|nonmerged">
+	<rom index="0" zip="frogger.zip|froggers2.zip" md5="4a469c668be9e428235a9f3ce14bdd6d" type="merged|nonmerged">
 		<part crc="597696d6" name="frogger.26"/>
 		<part crc="b6e6fcc3" name="frogger.27"/>
 		<part crc="aca22ae0" name="frsm3.7"/>
