@@ -36,6 +36,7 @@
 		
 		
 <!-- Start ROM Changes to fix bugs by philmurr 2020-->
+<!-- http://www.ukvac.com/forum/frogger-bugs-descriptions-and-fixes_topic381374.html -->
 <!-- ROM frogger.27 (starts at $1000) -->
 
 <patch offset="0x1216">	40 </patch>
