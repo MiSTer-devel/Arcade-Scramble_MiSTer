@@ -204,9 +204,11 @@ wire        forced_scandoubler;
 wire        direct_video;
 
 wire        ioctl_download;
+wire        ioctl_upload;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 wire  [7:0] ioctl_index;
 wire [15:0] sdram_sz;
 
@@ -232,10 +234,12 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
 
+	.ioctl_upload(ioctl_upload),
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
 	.ioctl_index(ioctl_index),
 	.sdram_sz(sdram_sz),
 
@@ -572,6 +576,11 @@ scramble_top scramble
 	.dl_addr(ioctl_addr[15:0]),
 	.dl_data(ioctl_dout),
 	.dl_wr(ioctl_wr & rom_download),
+	
+	.ram_address(ram_address),
+	.ram_data(ioctl_din),
+	.ram_data_in(hiscore_to_ram),
+	.ram_data_write(hiscore_write),
 
 	.O_AUDIO(audio),
 
@@ -639,5 +648,26 @@ always @(posedge clk_sys) begin
 		{bg_a,bg_b,bg_g,bg_r} <= 0;
 	end
 end
+
+
+wire [10:0]ram_address;
+wire [7:0]hiscore_to_ram;
+wire hiscore_write;
+
+hiscore hi (
+   .clk(clk_sys),
+   .ioctl_upload(ioctl_upload),
+   .ioctl_download(ioctl_download),
+   .ioctl_wr(ioctl_wr),
+   .ioctl_addr(ioctl_addr),
+   .ioctl_dout(ioctl_dout),
+   .ioctl_din(ioctl_din),
+   .ioctl_index(ioctl_index),
+   .ram_address(ram_address),
+	.data_to_ram(hiscore_to_ram),
+	.ram_write(hiscore_write)
+);
+
+
 
 endmodule

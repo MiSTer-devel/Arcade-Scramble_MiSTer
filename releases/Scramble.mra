@@ -48,4 +48,11 @@
 		<part crc="5f30311a" repeat="4" name="5f"/>
 		<part crc="4e3caeab" name="c01s.6e"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 42 00 1E 00 01 00
+		 00 00 40 A8 03 00 01 00
+		</part>
+   </rom>
+   <nvram index="4" size="33"/>
 </misterromdescription>
