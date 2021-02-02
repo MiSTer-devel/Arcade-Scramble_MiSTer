@@ -38,4 +38,10 @@
 		<part crc="8a3da4d1" repeat="4" name="cpu.5f"/>
 		<part crc="9b87f90d" name="82s123.6e"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 81 13 3C 02 50 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

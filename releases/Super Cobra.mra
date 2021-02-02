@@ -33,4 +33,11 @@
 		<part crc="64d113b4" repeat="4" name="epr1274.5h"/>
 		<part crc="9b87f90d" name="82s123.6e"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 82 00 1E 00 01 00
+		 00 00 80 A8 03 00 01 00
+		</part>
+   </rom>
+   <nvram index="4" size="33"/>
 </misterromdescription>

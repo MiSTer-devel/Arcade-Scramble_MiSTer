@@ -35,4 +35,10 @@
 		<part crc="2c5b612b" repeat="4" name="5f.cpu"/>
 		<part crc="fce333c7" name="colr6f.cpu"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>0:80ef:3c:01:4c
+		 00 00 80 EF 3C 01 4C 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

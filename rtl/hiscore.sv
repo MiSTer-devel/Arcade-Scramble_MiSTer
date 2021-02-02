@@ -270,7 +270,6 @@ end
 // it into game memory at the right time
 //
 
-
 dpram_hs #(.addr_width_g(8),.data_width_g(8))
 hiscoredata (
 .clk_a_i(clk),
@@ -281,13 +280,7 @@ hiscoredata (
 .addr_b_i(local_addr[7:0]),
 .data_b_o(data_to_ram)
 );
-//		clk_a_i  => clk,
-//		en_a_i   => ena,
-//		we_a_i   => ram_ena and (not cpu_wr_l),
-//		addr_a_i => cpu_addr(10 downto 0),
-//		data_a_i => cpu_data_out,
-//		data_a_o => ram_dout,
-		
+
 //reg [24:0] last_address;
 reg [7:0] last_index;
 reg done_downloading=0;

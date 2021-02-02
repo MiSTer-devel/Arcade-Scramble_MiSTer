@@ -37,4 +37,10 @@
 		<part crc="fd4252e9" name="calipso.5f"/>
 		<part crc="01165832" name="calipso.clr"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 81 CB 3C 01 45 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>
