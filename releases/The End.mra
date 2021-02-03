@@ -47,5 +47,5 @@
 		 00 00 40 A8 03 00 00 00
 		</part>
    </rom>
-   <nvram index="4" size="12"/>
+   <nvram index="4" size="18"/>
 </misterromdescription>

@@ -36,7 +36,7 @@
 		<part crc="fce333c7" name="colr6f.cpu"/>
 	</rom>
 	<rom index="3" md5="none">
-		<part>0:80ef:3c:01:4c
+		<part>
 		 00 00 80 EF 3C 01 4C 00
 		</part>
    </rom>
