@@ -81,10 +81,13 @@ entity SCRAMBLE is
     dl_wr                 : in    std_logic;
     dl_data               : in    std_logic_vector( 7 downto 0);
 
+
 	 ram_address			  : in  	 std_logic_vector(10 downto 0);
 	 ram_data   			  : out   std_logic_vector(7 downto 0);
 	 ram_data_in			  : in    std_logic_vector(7 downto 0);
-	 ram_data_write		  : in    std_logic
+	 ram_data_write		  : in    std_logic;
+
+    FlipVertical          : in    std_logic
 
     );
 end;
@@ -144,6 +147,8 @@ architecture RTL of SCRAMBLE is
     signal starson          : std_logic;
     signal hcma             : std_logic;
     signal vcma             : std_logic;
+    signal hcma_f           : std_logic;
+    signal vcma_f           : std_logic;
     signal gfxbank          : std_logic_vector(1 downto 0);
 
     signal pgm_rom_dout     : array_4x8;
@@ -242,6 +247,10 @@ begin
   --
   -- video
   --
+  
+  vcma_f <= not vcma when FlipVertical='1' else vcma;
+  hcma_f <= not hcma when FlipVertical='1' else hcma;
+  
   u_video : entity work.SCRAMBLE_VIDEO
     port map (
       I_HWSEL         => I_HWSEL,
@@ -252,8 +261,8 @@ begin
       I_VBLANK        => vblank,
       I_VSYNC         => vsync,
 
-      I_VCMA          => vcma,
-      I_HCMA          => hcma,
+      I_VCMA          => vcma_f,
+      I_HCMA          => hcma_f,
       --
       I_CPU_ADDR      => cpu_addr,
       I_CPU_DATA      => cpu_data_out,
