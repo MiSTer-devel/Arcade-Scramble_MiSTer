@@ -75,7 +75,12 @@ port (
 
 	dl_addr          : in  std_logic_vector(15 downto 0);
 	dl_wr            : in  std_logic;
-	dl_data          : in  std_logic_vector( 7 downto 0)
+	dl_data          : in  std_logic_vector( 7 downto 0);
+
+   ram_address      : in  std_logic_vector(10 downto 0);
+   ram_data         : out std_logic_vector(7 downto 0);
+   ram_data_in		  : in  std_logic_vector(7 downto 0);
+   ram_data_write	  : in  std_logic
 );
 end;
 
@@ -126,7 +131,12 @@ port map (
 	--
 	dl_addr               => dl_addr,
 	dl_wr                 => dl_wr,
-	dl_data               => dl_data
+	dl_data               => dl_data,
+	
+	ram_address				 => ram_address,
+	ram_data				    => ram_data,
+	ram_data_in				 => ram_data_in,
+	ram_data_write			 => ram_data_write
 );
 
 --

@@ -37,4 +37,10 @@
 		<part crc="c5fa1aa0" repeat="4" name="moon_war_ii_ra20_5f.5f"/>
 		<part crc="99614c6c" name="moonwar_ii_color_6ea1.6e"/>
 	</rom>
+		<rom index="3" md5="none">
+		<part>
+		 00 00 80 F2 3C 02 4C 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

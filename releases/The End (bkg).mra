@@ -14381,4 +14381,11 @@ C8D0F000F7E8FF003A6F690000010100
 05050800050508000404070006040800
 		</part>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 43 C0 0F 00 00 00
+		 00 00 40 A8 03 00 00 00
+		</part>
+   </rom>
+   <nvram index="4" size="18"/>
 </misterromdescription>

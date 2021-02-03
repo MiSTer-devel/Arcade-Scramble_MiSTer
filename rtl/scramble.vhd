@@ -79,7 +79,13 @@ entity SCRAMBLE is
     --
     dl_addr               : in    std_logic_vector(15 downto 0);
     dl_wr                 : in    std_logic;
-    dl_data               : in    std_logic_vector( 7 downto 0)
+    dl_data               : in    std_logic_vector( 7 downto 0);
+
+	 ram_address			  : in  	 std_logic_vector(10 downto 0);
+	 ram_data   			  : out   std_logic_vector(7 downto 0);
+	 ram_data_in			  : in    std_logic_vector(7 downto 0);
+	 ram_data_write		  : in    std_logic
+
     );
 end;
 
@@ -279,6 +285,8 @@ begin
       dl_addr         => dl_addr,
       dl_wr           => dl_wr,
       dl_data         => dl_data
+		
+		
       );
 
   -- other cpu signals
@@ -603,19 +611,22 @@ begin
 	);
     rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
 
-	u_cpu_ram : work.dpram generic map (11,8)
+	u_cpu_ram : work.dpram_hs generic map (11,8)
 	port map
 	(
 		clk_a_i  => clk,
 		en_a_i   => ena,
-		we_i     => ram_ena and (not cpu_wr_l),
-
+		we_a_i   => ram_ena and (not cpu_wr_l),
 		addr_a_i => cpu_addr(10 downto 0),
 		data_a_i => cpu_data_out,
+		data_a_o => ram_dout,
 
 		clk_b_i  => clk,
-		addr_b_i => cpu_addr(10 downto 0),
-		data_b_o => ram_dout
+		en_b_i   => '1',
+		we_b_i   => ram_data_write,	
+		data_b_i => ram_data_in,
+		data_b_o => ram_data,
+		addr_b_i => ram_address
 	);
 
   p_ram_ctrl : process(cpu_addr, page_4to7_l)

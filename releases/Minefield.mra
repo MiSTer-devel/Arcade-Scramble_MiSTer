@@ -33,4 +33,10 @@
 		<part crc="9f703006" repeat="4" name="ma15f"/>
 		<part crc="1877368e" name="minefld.clr"/>
     </rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 80 F3 3C 01 43 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

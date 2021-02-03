@@ -46,4 +46,10 @@
 		<part crc="55cd5acd" repeat="4" name="atlantis2/boa_9.5f"/>
 		<part crc="4e3caeab" name="c01s.6e"/>
   </rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 40 3D 2C 00 00 00
+		</part>
+   </rom>
+   <nvram index="4" size="44"/>
 </misterromdescription>
