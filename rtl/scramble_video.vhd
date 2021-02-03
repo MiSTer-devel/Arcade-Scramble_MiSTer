@@ -143,6 +143,8 @@ architecture RTL of SCRAMBLE_VIDEO is
   -- object ram
   signal obj_addr             : std_logic_vector(7 downto 0);
   signal hpla                 : std_logic_vector(7 downto 0);
+  signal hplaf                : std_logic_vector(7 downto 0);
+  signal hplafm               : std_logic_vector(7 downto 0);
   signal objdata              : std_logic_vector(7 downto 0);
 
   signal obj_rom_addr         : std_logic_vector(12 downto 0);
@@ -266,6 +268,12 @@ begin
     cntr_load <= ld and (    h256) and (not I_HCNT(3));
 
   end process;
+  
+  -- AJS flip the bullets in flip vertical mode
+  hplaf  <= (241 - hpla) when I_HCMA = '1' else hpla;
+  hplafm  <= (248 - hpla) when I_HCMA = '1' else hpla;
+
+  
 
   p_hv_flip : process(I_HCNT, I_VCNT, I_VCMA, hcmp1_s)
   begin
@@ -404,7 +412,7 @@ begin
 		data_b_o => hpla
 	);
 
-  p_objdata_regs : process
+	p_objdata_regs : process
   begin
     wait until rising_edge(CLK);
     if (ENA = '1') then
@@ -596,9 +604,10 @@ begin
 
       if (sld_l = '0') then
 			if I_HWSEL = I_HWSEL_DARKPLNT then
-				shell_cnt <= 240 - hpla;
+				shell_cnt <= 240 - hplaf;
 			else
-				shell_cnt <= hpla;
+				--shell_cnt <= 241 - hpla; -- ajs not added
+				shell_cnt <=  hplaf; -- ajs not added
 			end if;
       elsif (cblank_l = '1') then
         shell_cnt <= shell_cnt + "1";
@@ -631,7 +640,8 @@ begin
     if (ENA = '1') then
 
       if (mld_l = '0') then
-        missile_cnt <= hpla;
+        --missile_cnt <= 241 - hpla; -- ajs change this too
+        missile_cnt <= hplafm; -- ajs change this too
       elsif (cblank_l = '1') then
         missile_cnt <= missile_cnt + "1";
       else

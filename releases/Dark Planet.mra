@@ -14368,4 +14368,11 @@ A2 81 B2 00 8A 7A A0 00 6B 4F 67 00 73 4C 5F 00
 19 16 19 00 1C 18 18 00 1B 14 13 00 1F 19 19 00 
 		</part>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 80 B8 1E 00 4A 00
+		 00 00 80 F4 1E 00 51 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

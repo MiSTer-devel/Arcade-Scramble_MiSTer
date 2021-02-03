@@ -139,8 +139,10 @@ assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 
 wire [1:0] ar = status[20:19];
 
-assign VIDEO_ARX = (!ar) ? ((status[2] ) ? 8'd4 : 8'd3) : (ar - 1'd1);
-assign VIDEO_ARY = (!ar) ? ((status[2] ) ? 8'd3 : 8'd4) : 12'd0;
+
+assign VIDEO_ARX = (!ar) ? ((status[2] |landscape ) ? 8'd4 : 8'd3) : (ar - 1'd1);
+assign VIDEO_ARY = (!ar) ? ((status[2] |landscape ) ? 8'd3 : 8'd4) : 12'd0;
+
 
 
 `include "build_id.v" 
@@ -149,6 +151,7 @@ localparam CONF_STR = {
 	"H0OJK,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"H1H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+	"O8,Flip Vertical,Off,On;",
 	"-;",
 	"h2O6,Rotation,Buttons,Spinner;",
 	"h2-;",
@@ -204,9 +207,11 @@ wire        forced_scandoubler;
 wire        direct_video;
 
 wire        ioctl_download;
+wire        ioctl_upload;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 wire  [7:0] ioctl_index;
 wire [15:0] sdram_sz;
 
@@ -232,10 +237,12 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.gamma_bus(gamma_bus),
 	.direct_video(direct_video),
 
+	.ioctl_upload(ioctl_upload),
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
 	.ioctl_index(ioctl_index),
 	.sdram_sz(sdram_sz),
 
@@ -536,7 +543,9 @@ wire ce_pix = ce_6p;
 wire no_rotate = status[2] | direct_video | landscape;
 
 wire fg = |{r,g,b};
-wire rotate_ccw = 0;
+
+wire rotate_ccw = status[8];
+
 screen_rotate screen_rotate (.*);
 
 arcade_video #(256,24) arcade_video
@@ -572,6 +581,11 @@ scramble_top scramble
 	.dl_addr(ioctl_addr[15:0]),
 	.dl_data(ioctl_dout),
 	.dl_wr(ioctl_wr & rom_download),
+	
+	.ram_address(ram_address),
+	.ram_data(ioctl_din),
+	.ram_data_in(hiscore_to_ram),
+	.ram_data_write(hiscore_write),
 
 	.O_AUDIO(audio),
 
@@ -587,7 +601,8 @@ scramble_top scramble
 	.ena_12(ce_12),
 	.ena_6(ce_6p),
 	.ena_6b(ce_6n),
-	.ena_1_79(ce_1p79)
+	.ena_1_79(ce_1p79),
+	.FlipVertical(status[8])
 );
 
 wire bg_download = ioctl_download && (ioctl_index == 2);
@@ -625,12 +640,19 @@ always @(posedge clk_sys) begin
 			old_vs <= vs;
 			{bg_a,bg_b,bg_g,bg_r} <= pic_data;
 			if(~(hblank|vblank)) begin
-				pic_addr <= pic_addr + 2'd2;
+			   if (status[8]) 
+					pic_addr <= pic_addr - 2'd2;
+				else
+					pic_addr <= pic_addr + 2'd2;
+				
 				pic_req <= 1;
 			end
 			
 			if(~old_vs & vs) begin
-				pic_addr <= 0;
+				if (status[8])
+					pic_addr <= 'h1C000 -2'd2;
+				else
+					pic_addr <= 0;
 				pic_req <= 1;
 			end
 		end
@@ -639,5 +661,26 @@ always @(posedge clk_sys) begin
 		{bg_a,bg_b,bg_g,bg_r} <= 0;
 	end
 end
+
+
+wire [10:0]ram_address;
+wire [7:0]hiscore_to_ram;
+wire hiscore_write;
+
+hiscore hi (
+   .clk(clk_sys),
+   .ioctl_upload(ioctl_upload),
+   .ioctl_download(ioctl_download),
+   .ioctl_wr(ioctl_wr),
+   .ioctl_addr(ioctl_addr),
+   .ioctl_dout(ioctl_dout),
+   .ioctl_din(ioctl_din),
+   .ioctl_index(ioctl_index),
+   .ram_address(ram_address),
+   .data_to_ram(hiscore_to_ram),
+   .ram_write(hiscore_write)
+);
+
+
 
 endmodule

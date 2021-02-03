@@ -28,4 +28,11 @@
 		<part crc="2af0ee66" repeat="4" name="drkplt5f.dat"/>
 		<part crc="86b6e124" name="6e.cpu"/>
     </rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 80 B8 1E 00 4A 00
+		 00 00 80 F4 1E 00 51 00
+		</part>
+   </rom>
+   <nvram index="4" size="60"/>
 </misterromdescription>

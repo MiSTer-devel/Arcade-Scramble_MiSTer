@@ -29,4 +29,12 @@
 		<part crc="e5999d52" repeat="4" name="turt_vid.5h"/>
 		<part crc="f3ef02dd" name="turtles.clr"/>
     </rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 82 00 1E 00 00 00
+		 00 00 80 A8 03 00 00 00
+		 00 00 93 40 01 01 01 00
+		</part>
+   </rom>
+   <nvram index="4" size="22"/>
 </misterromdescription>

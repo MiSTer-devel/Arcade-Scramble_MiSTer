@@ -34,4 +34,11 @@
 		<part crc="05f7d883" repeat="4" name="epr-607.ic101"/>
 		<part crc="413703bf" name="pr-91.6l"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 83 F1 0A 63 01 00
+		 00 00 83 EF 02 63 04 00
+		</part>
+   </rom>
+   <nvram index="4" size="12"/>
 </misterromdescription>

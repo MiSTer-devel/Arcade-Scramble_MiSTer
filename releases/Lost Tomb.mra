@@ -37,4 +37,10 @@
 		<part crc="61f137e7" repeat="4" name="5f"/>
 		<part crc="1108b816" name="ltprom"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 81 10 50 03 00 00
+		</part>
+   </rom>
+   <nvram index="4" size="80"/>
 </misterromdescription>

@@ -41,4 +41,11 @@
 		<part crc="68ccf7bf" repeat="4" name="ic30_2c.bin"/>
 		<part crc="24652bc4" name="6331-1j.86"/>
 	</rom>
+	<rom index="3" md5="none">
+		<part>
+		 00 00 43 C0 0F 00 00 00
+		 00 00 40 A8 03 00 00 00
+		</part>
+   </rom>
+   <nvram index="4" size="18"/>
 </misterromdescription>

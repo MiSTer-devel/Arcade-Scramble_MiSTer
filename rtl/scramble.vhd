@@ -79,7 +79,16 @@ entity SCRAMBLE is
     --
     dl_addr               : in    std_logic_vector(15 downto 0);
     dl_wr                 : in    std_logic;
-    dl_data               : in    std_logic_vector( 7 downto 0)
+    dl_data               : in    std_logic_vector( 7 downto 0);
+
+
+	 ram_address			  : in  	 std_logic_vector(10 downto 0);
+	 ram_data   			  : out   std_logic_vector(7 downto 0);
+	 ram_data_in			  : in    std_logic_vector(7 downto 0);
+	 ram_data_write		  : in    std_logic;
+
+    FlipVertical          : in    std_logic
+
     );
 end;
 
@@ -138,6 +147,8 @@ architecture RTL of SCRAMBLE is
     signal starson          : std_logic;
     signal hcma             : std_logic;
     signal vcma             : std_logic;
+    signal hcma_f           : std_logic;
+    signal vcma_f           : std_logic;
     signal gfxbank          : std_logic_vector(1 downto 0);
 
     signal pgm_rom_dout     : array_4x8;
@@ -236,6 +247,10 @@ begin
   --
   -- video
   --
+  
+  vcma_f <= not vcma when FlipVertical='1' else vcma;
+  hcma_f <= not hcma when FlipVertical='1' else hcma;
+  
   u_video : entity work.SCRAMBLE_VIDEO
     port map (
       I_HWSEL         => I_HWSEL,
@@ -246,8 +261,8 @@ begin
       I_VBLANK        => vblank,
       I_VSYNC         => vsync,
 
-      I_VCMA          => vcma,
-      I_HCMA          => hcma,
+      I_VCMA          => vcma_f,
+      I_HCMA          => hcma_f,
       --
       I_CPU_ADDR      => cpu_addr,
       I_CPU_DATA      => cpu_data_out,
@@ -279,6 +294,8 @@ begin
       dl_addr         => dl_addr,
       dl_wr           => dl_wr,
       dl_data         => dl_data
+		
+		
       );
 
   -- other cpu signals
@@ -603,19 +620,22 @@ begin
 	);
     rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
 
-	u_cpu_ram : work.dpram generic map (11,8)
+	u_cpu_ram : work.dpram_hs generic map (11,8)
 	port map
 	(
 		clk_a_i  => clk,
 		en_a_i   => ena,
-		we_i     => ram_ena and (not cpu_wr_l),
-
+		we_a_i   => ram_ena and (not cpu_wr_l),
 		addr_a_i => cpu_addr(10 downto 0),
 		data_a_i => cpu_data_out,
+		data_a_o => ram_dout,
 
 		clk_b_i  => clk,
-		addr_b_i => cpu_addr(10 downto 0),
-		data_b_o => ram_dout
+		en_b_i   => '1',
+		we_b_i   => ram_data_write,	
+		data_b_i => ram_data_in,
+		data_b_o => ram_data,
+		addr_b_i => ram_address
 	);
 
   p_ram_ctrl : process(cpu_addr, page_4to7_l)
