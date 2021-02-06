@@ -650,7 +650,7 @@ always @(posedge clk_sys) begin
 			
 			if(~old_vs & vs) begin
 				if (status[8])
-					pic_addr <= 'h1C000 -2'd2;
+					pic_addr <= 'h1C000;
 				else
 					pic_addr <= 0;
 				pic_req <= 1;
