@@ -82,12 +82,14 @@ entity SCRAMBLE is
     dl_data               : in    std_logic_vector( 7 downto 0);
 
 
-	 ram_address			  : in  	 std_logic_vector(10 downto 0);
-	 ram_data   			  : out   std_logic_vector(7 downto 0);
-	 ram_data_in			  : in    std_logic_vector(7 downto 0);
-	 ram_data_write		  : in    std_logic;
+
+	ram_address			  : in  	 std_logic_vector(10 downto 0);
+	ram_data   			  : out   std_logic_vector(7 downto 0);
+	ram_data_in			  : in    std_logic_vector(7 downto 0);
+	ram_data_write		  : in    std_logic;
 
     FlipVertical          : in    std_logic
+
 
     );
 end;
