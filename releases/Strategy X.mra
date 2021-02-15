@@ -1,5 +1,6 @@
 <misterromdescription>
     <name>Strategy X</name>
+	<mameversion>0217</mameversion>
 	<setname>stratgyx</setname>
 	<rbf>scramble</rbf>
 	<buttons names="Fire,Turn Left,Turn Right,-,Start 1P,Start 2P,Coin" default="A,L,R,Start,Select,Y"/>
