@@ -11,7 +11,7 @@
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>tazmania</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin" default="A,B,Start,Select,R"/>
+	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="FF,FD,FB">
 		<dip bits="8"     name="Lives" ids="5,3"/>
 		<dip bits="9"     name="Demo Sounds" ids="On,Off"/>

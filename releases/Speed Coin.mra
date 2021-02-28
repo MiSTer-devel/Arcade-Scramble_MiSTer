@@ -11,7 +11,7 @@
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>spdcoin</setname>
 	<rbf>scramble</rbf>
-	<buttons names="-,-,-,-,Start 1P,Start 2P,Coin" default="Start,Select,R"/>
+	<buttons names="-,-,-,-,Start 1P,Start 2P,Coin,Pause" default="Start,Select,R,L"/>
 	<switches default="FF,FC,FB">
 		<dip bits="8"     name="Freeze" ids="Off,On"/>
 		<dip bits="9"     name="Free Play" ids="Off,On"/>

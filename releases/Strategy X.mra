@@ -3,7 +3,7 @@
 	<mameversion>0217</mameversion>
 	<setname>stratgyx</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Fire,Turn Left,Turn Right,-,Start 1P,Start 2P,Coin" default="A,L,R,Start,Select,Y"/>
+	<buttons names="Fire,Turn Left,Turn Right,-,Start 1P,Start 2P,Coin,Pause" default="A,L,R,Start,Select,Y,X"/>
 	<switches default="FF,FC,F1,FF">
 		<dip bits="8,9"   name="Lives" ids="3,4,5,255(Cheat)"/>
 		<dip bits="17,18" name="Coinage" ids="1c/1cr,1c/2cr,1c/3cr,1c/4cr"/>

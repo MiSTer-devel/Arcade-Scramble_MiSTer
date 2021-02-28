@@ -8,7 +8,7 @@
 	<category>Maze / Qix</category>
 	<setname>amidars</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Jump,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<buttons names="Jump,-,-,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="FF,FF,F1">
 		<dip bits="8,9" name="Lives" ids="255(Cheat),5,4,3"/>
 		<dip bits="17"  name="Coinage" ids="1c/1cr,2c/1cr"/>

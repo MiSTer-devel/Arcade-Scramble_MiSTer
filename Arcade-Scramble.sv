@@ -52,6 +52,9 @@ module emu
 	output        VGA_F1,
 	output [1:0]  VGA_SL,
 	output        VGA_SCALER, // Force VGA scaler
+	
+	input  [11:0] HDMI_WIDTH,
+	input  [11:0] HDMI_HEIGHT,
 
 	// Use framebuffer from DDRAM (USE_FB=1 in qsf)
 	// FB_FORMAT:
@@ -159,8 +162,8 @@ localparam CONF_STR = {
 	"DIP;",
 	"-;",
 	"R0,Reset;",
-	"J1,Fire 1,Fire 2,Fire 3,Fire 4,Start 1P,Start 2P,Coin;",
-	"jn,A,B,X,Y,Start,Select,R;",
+	"J1,Fire 1,Fire 2,Fire 3,Fire 4,Start 1P,Start 2P,Coin,Pause;",
+	"jn,A,B,X,Y,Start,Select,R,L;",
 	"V,v",`BUILD_DATE
 };
 
@@ -293,6 +296,38 @@ wire m_spcw    = m_spcw1     | m_spcw2;
 wire m_start1  = joy[8];
 wire m_start2  = joy[9];
 wire m_coin    = joy[10];
+wire m_pause   = joy[11];
+
+// PAUSE SYSTEM
+reg				pause;									// Pause signal (active-high)
+reg				pause_toggle = 1'b0;					// User paused (active-high)
+reg [31:0]		pause_timer;							// Time since pause
+reg [31:0]		pause_timer_dim = 31'hE4E1C00;	// Time until screen dim (10 seconds @ ~24Mhz)
+
+always @(posedge clk_sys) begin
+	// User pause toggle
+	reg old_pause;
+	old_pause <= m_pause;
+	if(~old_pause & m_pause) pause_toggle <= ~pause_toggle;
+	
+	// Screen dim while paused
+	rgb_out <= {r,g,b};
+	if(pause_toggle)
+	begin
+		if(pause_timer<pause_timer_dim)
+		begin
+			pause_timer <= pause_timer + 1'b1;
+		end
+		else
+		begin
+			rgb_out <= {rgb_in[23:16] >> 1, rgb_in[15:8] >> 1, rgb_in[7:0] >> 1};
+		end
+	end
+	else
+	begin
+		pause_timer <= 1'b0;
+	end
+end
 
 reg [8:0] sp;
 always @(posedge clk_sys) begin
@@ -537,11 +572,13 @@ spinner #(2,4,2) dp_sp (
 wire hblank, vblank;
 wire hs, vs;
 wire [7:0] r,g,b;
+wire [23:0] rgb_out;
 wire ce_pix = ce_6p;
 
 wire no_rotate = status[2] | direct_video | landscape;
 
-wire fg = |{r,g,b};
+wire			fg = |{r,g,b};
+wire [23:0] rgb_in = (fg && !bg_a) ? {r,g,b} : {bg_r,bg_g,bg_b};
 
 wire rotate_ccw = status[8];
 
@@ -553,7 +590,7 @@ arcade_video #(256,24) arcade_video
 
 	.clk_video(clk_vid),
 
-	.RGB_in((fg && !bg_a) ? {r,g,b} : {bg_r,bg_g,bg_b}),
+	.RGB_in(rgb_out),
 	.HBlank(hblank),
 	.VBlank(vblank),
 	.HSync(hs),
@@ -566,6 +603,8 @@ wire [9:0] audio;
 assign AUDIO_L = {audio, 6'd0};
 assign AUDIO_R = AUDIO_L;
 assign AUDIO_S = 0;
+
+wire reset = (RESET | status[0] | buttons[1]);
 
 scramble_top scramble
 (
@@ -580,11 +619,13 @@ scramble_top scramble
 	.dl_addr(ioctl_addr[15:0]),
 	.dl_data(ioctl_dout),
 	.dl_wr(ioctl_wr & rom_download),
-	
-	.ram_address(ram_address),
-	.ram_data(ioctl_din),
-	.ram_data_in(hiscore_to_ram),
-	.ram_data_write(hiscore_write),
+
+	.pause(pause),
+
+	.hs_address(hs_address),
+	.hs_data_out(ioctl_din),
+	.hs_data_in(hs_to_ram),
+	.hs_write(hs_write),
 
 	.O_AUDIO(audio),
 
@@ -595,7 +636,7 @@ scramble_top scramble
 	.I_PC(sw[2] & input2),
 	.I_PD(sw[3] & input3),
 
-	.RESET(RESET | status[0] | buttons[1]),
+	.RESET(reset),
 	.clk(clk_sys),
 	.ena_12(ce_12),
 	.ena_6(ce_6p),
@@ -661,26 +702,36 @@ always @(posedge clk_sys) begin
 	end
 end
 
+// HISCORE SYSTEM
+// --------------
+wire [10:0]hs_address;
+wire [7:0]hs_to_ram;
+wire hs_write;
+wire hs_access;
 
-wire [10:0]ram_address;
-wire [7:0]hiscore_to_ram;
-wire hiscore_write;
+assign pause = hs_access || pause_toggle;
 
-hiscore hi (
-   .clk(clk_sys),
-   .ioctl_upload(ioctl_upload),
-   .ioctl_download(ioctl_download),
-   .ioctl_wr(ioctl_wr),
-   .ioctl_addr(ioctl_addr),
-   .ioctl_dout(ioctl_dout),
-   .ioctl_din(ioctl_din),
-   .ioctl_index(ioctl_index),
-   .ram_address(ram_address),
-   .data_to_ram(hiscore_to_ram),
-   .ram_write(hiscore_write)
-
+hiscore #(
+	.HS_ADDRESSWIDTH(11),
+	.CFG_ADDRESSWIDTH(4),
+	.DELAY_CHECKWAIT(6'b1111),
+	.DELAY_CHECKHOLD(1'b0)
+	
+) hi (
+	.clk(clk_sys),
+	.reset(reset),
+	.delay(31'h7FFFF),
+	.ioctl_upload(ioctl_upload),
+	.ioctl_download(ioctl_download),
+	.ioctl_wr(ioctl_wr),
+	.ioctl_addr(ioctl_addr),
+	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
+	.ioctl_index(ioctl_index),
+	.ram_address(hs_address),
+	.data_to_ram(hs_to_ram),
+	.ram_write(hs_write),
+	.ram_access(hs_access)
 );
-
-
 
 endmodule

@@ -8,7 +8,7 @@
 	<category>Maze / Frogs</category>
 	<setname>frogger</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Jump,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<buttons names="Jump,-,-,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="FF,FC,F1">
 		<dip bits="8,9"   name="Lives" ids="3,4,5,256(Cheat)"/>
 		<dip bits="17,18" name="Coinage" ids="1c/1cr,2c/1cr"/>

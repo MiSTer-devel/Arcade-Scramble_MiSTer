@@ -4,7 +4,7 @@
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>scobra</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin" default="A,B,Start,Select,R"/>
+	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="FF,FD,F3">
 		<dip bits="8"     name="Allow Continue" ids="No,4 times"/>
 		<dip bits="9"     name="Lives" ids="3,4"/>

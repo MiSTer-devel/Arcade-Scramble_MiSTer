@@ -12,7 +12,7 @@
 	<year>1981</year>
 	<manufacturer>Comsoft</manufacturer>
 	<rbf>scramble</rbf>
-	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin" default="A,B,Start,Select,R"/>
+	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="FF,FE,F3">
 		<dip bits="8"     name="Cabinet" ids="Upright,Cocktail"/>
 		<dip bits="9"     name="Lives" ids="5,3"/>

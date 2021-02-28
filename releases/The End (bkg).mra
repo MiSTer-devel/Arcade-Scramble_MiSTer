@@ -12,7 +12,7 @@
 		<dip bits="17,18" name="Coinage" ids="1c/1cr,2c/1cr,3c/1cr,1c/2cr"/>
 		<dip bits="19"    name="Cabinet" ids="Upright,Cocktail"/>
 	</switches>
-	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin" default="A,Start,Select,R"/>
+	<buttons names="Fire,-,-,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<rom index="1">
 		<part>0C</part>
 	</rom>
