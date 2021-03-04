@@ -81,15 +81,14 @@ entity SCRAMBLE is
     dl_wr                 : in    std_logic;
     dl_data               : in    std_logic_vector( 7 downto 0);
 
+    PAUSE                 : in    std_logic;
 
-
-	ram_address			  : in  	 std_logic_vector(10 downto 0);
-	ram_data   			  : out   std_logic_vector(7 downto 0);
-	ram_data_in			  : in    std_logic_vector(7 downto 0);
-	ram_data_write		  : in    std_logic;
+    hs_address            : in    std_logic_vector(10 downto 0);
+    hs_data_out           : out   std_logic_vector(7 downto 0);
+    hs_data_in            : in    std_logic_vector(7 downto 0);
+    hs_write              : in    std_logic;
 
     FlipVertical          : in    std_logic
-
 
     );
 end;
@@ -313,9 +312,9 @@ begin
     -- timing is still ok.
     --
     if (vblank = '1') then
-      cpu_wait_l <='1';
+      cpu_wait_l <= not PAUSE;
     else
-      cpu_wait_l <= '1';
+      cpu_wait_l <= not PAUSE;
       if (hblank = '0') and (waen_l = '0') then
         cpu_wait_l <= '0';
       end if;
@@ -620,9 +619,10 @@ begin
 		addr_b_i => rom_addr,
 		data_b_o => rom_dout
 	);
-    rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
 
-	u_cpu_ram : work.dpram_hs generic map (11,8)
+	rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
+
+	u_cpu_ram : work.dpram2 generic map (11,8)
 	port map
 	(
 		clk_a_i  => clk,
@@ -634,10 +634,10 @@ begin
 
 		clk_b_i  => clk,
 		en_b_i   => '1',
-		we_b_i   => ram_data_write,	
-		data_b_i => ram_data_in,
-		data_b_o => ram_data,
-		addr_b_i => ram_address
+		we_b_i   => hs_write,
+		data_b_i => hs_data_in,
+		data_b_o => hs_data_out,
+		addr_b_i => hs_address
 	);
 
   p_ram_ctrl : process(cpu_addr, page_4to7_l)

@@ -5,7 +5,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity dpram_hs is
+entity dpram2 is
 
 generic (
 	 addr_width_g : integer := 8;
@@ -26,13 +26,13 @@ port (
 	data_b_o : out std_logic_vector(data_width_g-1 downto 0) := (others => '0')
 );
 
-end dpram_hs;
+end dpram2;
 
 
 library ieee;
 use ieee.numeric_std.all;
 
-architecture rtl of dpram_hs is
+architecture rtl of dpram2 is
 
   type   ram_t is array (natural range 2**addr_width_g-1 downto 0) of std_logic_vector(data_width_g-1 downto 0);
   signal ram_q : ram_t;

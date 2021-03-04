@@ -1,298 +1,461 @@
-module hiscore (
-   input        clk,
-   input        ioctl_upload,
-   input        ioctl_download,
-   input        ioctl_wr,
-   input [24:0] ioctl_addr,
-   input [7:0] ioctl_dout,
-   input [7:0] ioctl_din,
-   input [7:0]  ioctl_index,
-   output [9:0] ram_address,
-   output [7:0] data_to_ram,
-   output  reg ram_write
+//============================================================================
+//  MAME hiscore.dat support for MiSTer arcade cores.
+//
+//  https://github.com/JimmyStones/Hiscores_MiSTer
+//
+//  Copyright (c) 2021 Alan Steremberg
+//  Copyright (c) 2021 Jim Gregory
+//
+//  This program is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by the Free
+//  Software Foundation; either version 3 of the License, or (at your option)
+//  any later version.
+//
+//  This program is distributed in the hope that it will be useful, but WITHOUT
+//  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//  more details.
+//
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//============================================================================
+
+module hiscore 
+#(
+	parameter HS_ADDRESSWIDTH=10,							// Max size of game RAM address for highscores
+	parameter CFG_ADDRESSWIDTH=4,							// Max size of RAM address for highscore.dat entries (default 4 = 16 entries max)
+	parameter CFG_LENGTHWIDTH=1,							// Max size of length for each highscore.dat entries (default 1 byte = 255)
+	parameter DELAY_CHECKWAIT=6'b111111,				// Delay between start/end check attempts
+	parameter DELAY_CHECKHOLD=3'b111					// Hold time for start/end check reads (allows mux to settle)
+)
+(
+	input										clk,
+	input										reset,
+	input	[31:0]							delay,			// Custom initial delay before highscore load begins
+	
+	input										ioctl_upload,
+	input										ioctl_download,
+	input										ioctl_wr,
+	input	[24:0]							ioctl_addr,
+	input	[7:0]								ioctl_dout,
+	input	[7:0]								ioctl_din,
+	input	[7:0]								ioctl_index,
+	
+	output	[HS_ADDRESSWIDTH-1:0]	ram_address,	// Address in game RAM to read/write score data
+	output	[7:0]							data_to_ram,	// Data to write to game RAM
+	output	reg							ram_write,		// Write to game RAM (active high)
+	output	reg							ram_access		// RAM read or write required (active high)
 );
 
 /*
-00 00 00 0b 0f 10 01 00
-00 00 00 23 0f 04 12 00
-[ addr (4)]len start end pad
-addr -> address of ram (in memory map)
-len -> how many bytes
-start -> wait for this value at start
-end -> wait for this value at end
+Hiscore config structure (CFG_LENGTHWIDTH=1)
+------------------------
+00 00 43 0b  0f    10  01  00
+00 00 40 23  02    04  12  00
+[   ADDR  ] LEN START END PAD
+
+4 bytes		Address of ram entry (in core memory map)
+1 byte		Length of ram entry in bytes 
+1 byte		Start value to check for at start of address range before proceeding
+1 byte		End value to check for at end of address range before proceeding
+1 byte		(padding)
+
+
+Hiscore config structure (CFG_LENGTHWIDTH=2)
+------------------------
+00 00 43 0b  00 0f    10  01
+00 00 40 23  00 02    04  12
+[   ADDR  ] [LEN ] START END
+
+4 bytes		Address of ram entry (in core memory map)
+2 bytes		Length of ram entry in bytes 
+1 byte		Start value to check for at start of address range before proceeding
+1 byte		End value to check for at end of address range before proceeding
+
 */
 
+// Hiscore config and dump status 
+reg				downloading_config = 1'b0;
+reg				downloading_dump = 1'b0;
+reg				downloaded_config = 1'b0;
+reg				downloaded_dump = 1'b0;
+reg	[3:0]		initialised;
 
-//reg [20:0] timer = 21'h1FFFFF;
-//reg [24:0] timer = 25'h1FFFFFF; // 2.8 seconds
-//reg [23:0] timer = 24'hFFFFFF; // 1.4 seconds
-//reg [23:0] timer = 24'h7FFFFF; // 0.7 seconds
-//reg [23:0] timer = 24'h3FFFFF; // 0.35 seconds
-//reg [23:0] timer = 24'h1FFFFF; // 0.175 seconds
-reg [23:0] timer = 24'h7FFFF; // 0.04 seconds
+assign downloading_config = ioctl_download && ioctl_wr && (ioctl_index==3);
+assign downloading_dump = ioctl_download && ioctl_wr && (ioctl_index==4);
 
-assign ram_address = ram_addr[9:0];
-   // save the config into a chunk of memory
-//reg [7:0] ioctl_dout_r;
-reg [7:0] ioctl_dout_r2;
-reg [7:0] ioctl_dout_r3;
+// Delay constants
+reg	[31:0] delay_default = 24'hFFFF;							// Default initial delay before highscore load begins (overridden by delay from module inputs if supplied)
+reg	[31:0] read_defaultwait = DELAY_CHECKWAIT;			// Delay between start/end check attempts
+reg	[31:0] read_defaultcheck = DELAY_CHECKHOLD;			// Duration of start/end check attempt (>1 loop to allow pause/mux based access to settle)
 
-reg [3:0] counter = 4'b0;
-reg [24:0] ram_addr;
-wire [23:0] addr_base;
-wire [7:0] length;
-wire [7:0] start_val;
-wire [7:0] end_val;
+assign ram_address = ram_addr[HS_ADDRESSWIDTH-1:0];
 
-reg [3:0] total_entries=4'b0;
+reg	[3:0]								state = 4'b0000;			// Current state machine index
+reg	[3:0]								next_state = 4'b0000;	// Next state machine index to move to after wait timer expires
+reg	[31:0]							wait_timer;					// Wait timer for inital/read/write delays
+reg										ram_read = 1'b0;			// Is RAM actively being read
+
+reg	[CFG_ADDRESSWIDTH-1:0]		counter = 4'b0;			// Index for current config table entry
+reg	[CFG_ADDRESSWIDTH-1:0]		total_entries=4'b0;		// Total count of config table entries
+reg										reset_last = 1'b0;		// Last cycle reset
+
+reg	[7:0]								last_ioctl_index;			// Last cycle HPS IO index
+reg										last_ioctl_download=0;	// Last cycle HPS IO download
+
+reg	[24:0]							ram_addr;					// Target RAM address for hiscore read/write
+reg	[24:0]							old_io_addr;
+reg	[24:0]							base_io_addr;
+wire	[23:0]							addr_base;
+reg	[24:0]							end_addr;
+reg	[24:0]							local_addr;
+wire	[(CFG_LENGTHWIDTH*8)-1:0]	length;
+wire	[7:0]								start_val;
+wire	[7:0]								end_val;
+
+wire address_we = downloading_config & (ioctl_addr[2:0] == 3'd3);
+wire length_we = downloading_config & (ioctl_addr[2:0] == 3'd3 + CFG_LENGTHWIDTH);
+wire startdata_we = downloading_config & (ioctl_addr[2:0] == 3'd4 + CFG_LENGTHWIDTH); 
+wire enddata_we = downloading_config & (ioctl_addr[2:0] == 3'd5 + CFG_LENGTHWIDTH);
+
+wire [23:0]								address_data_in = {address_data_b3, address_data_b2, ioctl_dout};
+wire [(CFG_LENGTHWIDTH*8)-1:0]	length_data_in = (CFG_LENGTHWIDTH == 1'b1) ? ioctl_dout : {length_data_b2, ioctl_dout};
+reg	[7:0]								address_data_b3;
+reg	[7:0]								address_data_b2;
+reg	[7:0]								length_data_b2;
+
+// RAM chunks used to store configuration data
+// - address_table
+// - length_table
+// - startdata_table
+// - enddata_table
+dpram_hs #(.aWidth(CFG_ADDRESSWIDTH),.dWidth(24))
+address_table(
+	.clk(clk),
+	.addr_a(ioctl_addr[CFG_ADDRESSWIDTH+2:3]),
+	.d_a(address_data_in), // ignore first byte
+	.we_a(address_we),
+	.q_b(addr_base),
+	.addr_b(counter)
+);
+// Length table - variable width depending on CFG_LENGTHWIDTH
+dpram_hs #(.aWidth(CFG_ADDRESSWIDTH),.dWidth(CFG_LENGTHWIDTH*8))
+length_table(
+	.clk(clk),
+	.addr_a(ioctl_addr[CFG_ADDRESSWIDTH+2:3]),
+	.d_a(length_data_in),
+	.we_a(length_we),
+	.q_b(length),
+	.addr_b(counter)
+);
+dpram_hs #(.aWidth(CFG_ADDRESSWIDTH),.dWidth(8))
+startdata_table(
+	.clk(clk),
+	.addr_a(ioctl_addr[CFG_ADDRESSWIDTH+2:3]),
+	.d_a(ioctl_dout),
+	.we_a(startdata_we), 
+	.q_b(start_val),
+	.addr_b(counter)
+);
+dpram_hs #(.aWidth(CFG_ADDRESSWIDTH),.dWidth(8))
+enddata_table(
+	.clk(clk),
+	.addr_a(ioctl_addr[CFG_ADDRESSWIDTH+2:3]),
+	.d_a(ioctl_dout),
+	.we_a(enddata_we),
+	.q_b(end_val),
+	.addr_b(counter)
+);
+
+// RAM chunk used to store hiscore data
+dpram_hs #(.aWidth(8),.dWidth(8))
+hiscoredata (
+	.clk(clk),
+	.we_a(downloading_dump),
+	.addr_a(ioctl_addr[7:0]),
+	.d_a(ioctl_dout),
+	.addr_b(local_addr[7:0]),
+	.we_b(ioctl_upload), 
+	.d_b(ioctl_din),
+	.q_b(data_to_ram)
+);
+
 
 always @(posedge clk)
 begin
-    //if(ioctl_wr & ~ioctl_addr[2] & ~ioctl_addr[1] & ~ioctl_addr[0]) ioctl_dout_r <= ioctl_dout;
-    if(ioctl_wr & ~ioctl_addr[2] & ~ioctl_addr[1] &  ioctl_addr[0]) ioctl_dout_r2 <= ioctl_dout;
-    if(ioctl_wr & ~ioctl_addr[2] & ioctl_addr[1] & ~ioctl_addr[0]) ioctl_dout_r3 <= ioctl_dout;
+	if (downloading_config)
+	begin
+		// Save configuration data into tables  
+		if(ioctl_wr & (ioctl_addr[2:0] == 3'd1)) address_data_b3 <= ioctl_dout;
+		if(ioctl_wr & (ioctl_addr[2:0] == 3'd2)) address_data_b2 <= ioctl_dout;
+		if(ioctl_wr & (ioctl_addr[2:0] == 3'd4)) length_data_b2 <= ioctl_dout;
+		// Keep track of the largest entry during config download
+		total_entries <= ioctl_addr[CFG_ADDRESSWIDTH+2:3];
+	end
+	
+	// Track completion of configuration and dump download
+	if ((last_ioctl_download != ioctl_download) && (ioctl_download == 1'b0))
+	begin
+		if (last_ioctl_index==3) downloaded_config <= 1'b1;
+		if (last_ioctl_index==4) downloaded_dump <= 1'b1;
+	end
 
-    //  keep track of the largest entry
-    if (ioctl_download & (ioctl_index==3))
-    	total_entries<=ioctl_addr[6:3];
+	// Track last ioctl values 
+	last_ioctl_download <= ioctl_download;
+	last_ioctl_index <= ioctl_index;
 
-    if (ioctl_wr & ioctl_download)
-        $display("HISCORE ioctl_addr %x %b ioctl_dout %x ioctl_dout_r %x", ioctl_addr,ioctl_addr[2:0],ioctl_dout,ioctl_dout_r);
-    if (ioctl_download & ioctl_wr & ~ioctl_addr[2] &  ioctl_addr[1] & ioctl_addr[0])
-        $display("HI HISCORE ioctl_addr %x %b ioctl_dout_r2 %x ioctl_dout_r3 %x ioctl_dout ", ioctl_addr,ioctl_addr[2:0],ioctl_dout_r2,ioctl_dout_r3,ioctl_dout);
-    if (ioctl_download & ioctl_wr & ioctl_addr[2] &  ioctl_addr[1] & ~ioctl_addr[0] &(ioctl_index==3))
-        $display("ENDVAL ioctl_addr %x %b counter %x ioctl_dout %x ", ioctl_addr,ioctl_addr[2:0],ioctl_addr[6:3],ioctl_dout);
-end
+	// Generate last address of entry to check end value
+	end_addr <= addr_base + length - 1'b1;
 
-dpram_hs #(
-	.addr_width_g(4),
-	.data_width_g(24) )
-address_table(
-	.addr_a_i(ioctl_addr[6:3]),
-	.clk_a_i(clk),
-	.data_a_i({ioctl_dout_r2,  ioctl_dout_r3, ioctl_dout}), // ignore first byte
-	.we_a_i(ioctl_download & ioctl_wr & ~ioctl_addr[2] &  ioctl_addr[1] & ioctl_addr[0] & (ioctl_index==3)),
-	.clk_b_i(clk),
-	.data_b_o(addr_base),
-	.addr_b_i(counter)
-);
+	if(downloaded_config)
+	begin
+		// Check for state machine initalise/reset
+		if (initialised == 1'b0 || (reset_last == 1'b1 && reset == 1'b0))
+		begin
+			wait_timer = (delay > 1'b0) ? delay : delay_default;
+			next_state <= 4'b0000;
+			state <= 4'b1111;
+			counter <= 4'b0;
+			initialised <= initialised + 1'b1;
+		end
+		reset_last <= reset;
 
-dpram_hs #(.addr_width_g(4),.data_width_g(8))
-length_table(
-	.addr_a_i(ioctl_addr[6:3]),
-	.clk_a_i(clk),
-	.data_a_i(ioctl_dout),
-	.we_a_i(ioctl_download& ioctl_wr & ioctl_addr[2] & ~ioctl_addr[1] & ~ioctl_addr[0]& (ioctl_index==3)), // ADDR b100
-	.clk_b_i(clk),
-	.data_b_o(length),
-	.addr_b_i(counter)
-);
-dpram_hs #(.addr_width_g(4),.data_width_g(8))
-startdata_table(
-	.addr_a_i(ioctl_addr[6:3]),
-	.clk_a_i(clk),
-	.data_a_i(ioctl_dout),
-	.we_a_i(ioctl_download& ioctl_wr & ioctl_addr[2] & ~ioctl_addr[1] & ioctl_addr[0]& (ioctl_index==3)), // ADDR b101
-	.clk_b_i(clk),
-	.data_b_o(start_val),
-	.addr_b_i(counter)
-);
-dpram_hs #(.addr_width_g(4),.data_width_g(8))
-enddata_table(
-	.addr_a_i(ioctl_addr[6:3]),
-	.clk_a_i(clk),
-	.data_a_i(ioctl_dout),
-	.we_a_i(ioctl_download& ioctl_wr & ioctl_addr[2] & ioctl_addr[1] & ~ioctl_addr[0]& (ioctl_index==3)), // ADDR b110
-	.clk_b_i(clk),
-	.data_b_o(end_val),
-	.addr_b_i(counter)
-);
+		// activate access signal when necessary
+		ram_access <= ioctl_upload | ram_write | ram_read;
+		
+		// Upload scores to HPS
+		if (ioctl_upload == 1'b1 && ioctl_index==4)
+		begin
+		
+			// generate addresses to read high score from game memory. Base addresses off ioctl_address
+			if (ioctl_addr == 25'b0) begin
+				local_addr <= 25'b0;
+				base_io_addr <= 25'b0;
+				counter <= 4'b0000;
+			end
+			// Move to next entry when last address is reached
+			if (old_io_addr!=ioctl_addr && ram_addr==end_addr[24:0])
+			begin
+				counter <= counter + 1'b1;
+				base_io_addr <= ioctl_addr;
+			end
+			// Set game ram address for reading back to HPS
+			ram_addr <= addr_base + (ioctl_addr - base_io_addr);
+			// Set local addresses to update cached dump in case of reset
+			local_addr <= ioctl_addr;
+			// Mark dump as readable
+			downloaded_dump <= 1'b1;
+		end
+		
+		if (ioctl_upload == 1'b0 && downloaded_dump == 1'b1 && reset == 1'b0)
+		begin
+			// State machine to write data to game RAM
+			case (state)
+				4'b0000: // Initialise state machine
+				begin
+					// Setup base addresses
+					local_addr <= 25'b0;
+					base_io_addr <= 25'b0;
+					// Set address for start check
+					ram_read <= 1'b0;
+					// Set wait timer
+					next_state <= 4'b0001;
+					state <= 4'b1111;
+					wait_timer <= read_defaultwait;
+				end
 
-reg [24:0]old_io_addr;
+				4'b0001: // Start check prepare and wait
+				begin
+					// Set start check address, enable ram read and move to start check state
+					ram_addr <= {1'b0, addr_base};
+					ram_read <= 1'b1;
+					state <= 4'b0010;
+					wait_timer <= read_defaultcheck;
+				end
 
-reg [24:0]  base_io_addr;
-reg [24:0] end_addr;
-
-reg [2:0] state = 3'b0;
-
-reg [24:0] local_addr;
-// 
-//  generate addresses to read high score
-//  from game memory. Base addresses off
-//  ioctl_address
-// 
-// 
-always @(posedge clk) begin
-
-end_addr <= addr_base + length - 1'b1;
-
-if (ioctl_upload) begin
-   if (ioctl_addr==25'b0) begin
-      base_io_addr<=25'b0;
-      counter<=4'b0;
-   end
-   if (old_io_addr!=ioctl_addr && ram_addr==end_addr[24:0])
-   begin
-      counter<=counter+1'b1;
-      base_io_addr<=ioctl_addr;
-   end
-
-   ram_addr<= addr_base + (ioctl_addr - base_io_addr);
-end
-//
-// loop through and check to see when memory matches
-//
-else if (done_downloading==1'b1 && ioctl_upload==1'b0) begin
-   case (state)
-
-       //
-       // Sit in first states until game memory is validated
-       // to match hiscore table start/end values
-       //
-
-       // start with counter == 0?
-       3'b000: // start
-         // setup beginning addr 
-          begin
-             $display("state 0 ram_addr %x addr_base %x",ram_addr,addr_base);
-             state <= 3'b001;
-             local_addr<=25'b0;
-             base_io_addr<=25'b0;
-             ram_addr<= {1'b0, addr_base};
-          end
-     
-       3'b001:  //  check each start_val
-
-           begin
-             ram_addr<= {1'b0, addr_base};
-             $display("HI HISCORE ?start_val==ioctl_din ioctl_din %x start_val %x ram_addr %x addr_base %x counter %x",ioctl_din,start_val,ram_addr,addr_base,counter);
-         // check beginning
-             if (ioctl_din==start_val)
-             begin
-                $display("HI HISCORE start_val==ioctl_din");
-                state <= 3'b010;
-                // setup ending addr 
-                ram_addr<= end_addr;
-             end
-         end
-       3'b010:  // check each end_val
-	     begin
-             // $display("HI HISCORE ?end_val==ioctl_din ioctl_din %x end_val %x ram_addr %x counter %x",ioctl_din,end_val,ram_addr,counter);
-             if (ioctl_din==end_val)
-             begin
-                 $display("HI HISCORE end_val==ioctl_din");
-                   // check to see if we are at the end..
-                if (counter==total_entries)   // we finished and validated - move to phase II, copying scores into game ram
-                begin
-					    if (timer == 0) 
-						 begin
-                     state <= 3'b110;
-                     $display("state 010 addr_base %x %x %x ",addr_base,local_addr,counter);
-                     counter<=0;
-		               ram_write<=0;
-                     $display("moving on..");
-                     ram_addr<= {1'b0, addr_base};
+				4'b0010: // Start check
+					begin
+						// Check for matching start value
+						if(ioctl_din == start_val)
+						begin
+						// - If match then stop ram_read and reset timer for end check
+							ram_read <= 1'b0;
+							next_state <= 4'b0011;
+							state <= 4'b1111;
+							wait_timer <= read_defaultwait;
 						end
-					else begin
-						timer = timer -1'b1;
-					end					
-                end
-                else begin  // increment counter, and check next entry
-                   $display("try next entry");
-                   counter<=counter+1'b1;
-                   state <= 3'b000;
-                end
-             end
-             end
-       //
-       //  this section walks through our temporary ram and copies into game ram
-       //  it needs to happen in chunks, because the game ram isn't necessarily consecutive
-       //
+						else
+						begin
+							if (wait_timer > 1'b0)
+							begin
+								wait_timer <= wait_timer - 1'b1;
+							end
+							else
+							begin
+								// - If no match after read wait then stop ram_read and retry
+								next_state <= 4'b0001;
+								state <= 4'b1111;
+								ram_read <= 1'b0;
+								wait_timer <= read_defaultwait;
+							end
+						end
+					end
 
-       3'b011:
-            begin
-               local_addr<= local_addr+1'b1;
-                $display("DUMP local_addr %x ram_addr %x addr_base %x base_io_addr %x end_addr %x ram_write %x",local_addr,ram_addr,addr_base,base_io_addr,end_addr,ram_write);
-                if (ram_addr==end_addr[24:0])
-                begin
-                   if (counter==total_entries) begin // DONE
-                     $display("counter==total %x == %x done writing",counter,total_entries);
-                      state<=3'b101;
-                   end else begin
-                     $display("increment counter %x ",counter);
-                     counter<=counter+1'b1;
-                     base_io_addr<=local_addr+1'b1;
-                     state<=3'b110;
-                   end
-                end else begin
-                   //ram_addr<= addr_base + (local_addr - base_io_addr);
-                   state<=3'b111;
-                end
-               ram_write<=0;
-            end
-        3'b100:
-           begin // our local ram should be correct, 
-                state<=3'b011;
-                $display("state 100  addr_base %x %x %x %x",addr_base,local_addr,counter,ram_addr);
-                ram_addr<= {1'b0, addr_base};
-	             ram_write<=1;
-           end
-        3'b101:
-	        begin
-		          ram_write<=0;
-           end
-        3'b110:  // counter is correct, next state the output of our local ram will be correct
-	        begin
-               $display("state 110 addr_base %x %x %x  ram_addr ",addr_base,local_addr,counter,ram_addr);
-		          state<=3'b100;
-           end
-        3'b111: // local ram is  correct
-           begin
-                ram_addr<= addr_base + (local_addr - base_io_addr);
-	             ram_write<=1;
-                state<=3'b011;
-           end
+				4'b0011: // End check prepare and wait
+				begin
+					// Set end check address, enable ram read and move to end check state
+					ram_addr <= end_addr;
+					ram_read <= 1'b1;
+					state <= 4'b0100;
+					wait_timer <= read_defaultcheck;
+				end
+					
+					
+				4'b0100: // End check
+					begin
+						// Check for matching end value
+						// - If match then move to next state
+						// - If no match then go back to previous state
+						if (ioctl_din == end_val)
+						begin
+							if (counter == total_entries)
+							begin
+								// If this was the last entry then move to phase II, copying scores into game ram
+								state <= 4'b1001;
+								counter <= 1'b0;
+								ram_write <= 1'b0;
+								ram_read <= 1'b0;
+								ram_addr <= {1'b0, addr_base};
+							end
+							else
+							begin
+								// Increment counter and restart state machine to check next entry
+								counter <= counter + 1'b1;
+								ram_read <= 1'b0;
+								state <= 4'b0000;
+							end
+						end
+						else
+						begin
+							if (wait_timer > 1'b0)
+							begin
+								wait_timer <= wait_timer - 1'b1;
+							end
+							else
+							begin
+								// - If no match after read wait then stop ram_read and retry
+								next_state <= 4'b0011;
+								state <= 4'b1111;
+								ram_read <= 1'b0;
+								wait_timer <= read_defaultwait;
+							end
+						end
+					end
 
-   endcase
+				//
+				//  this section walks through our temporary ram and copies into game ram
+				//  it needs to happen in chunks, because the game ram isn't necessarily consecutive
+				4'b0110:
+					begin
+						local_addr <= local_addr + 1'b1;
+						if (ram_addr == end_addr[24:0])
+						begin
+							if (counter == total_entries) 
+							begin 
+								state <= 4'b1000;
+							end
+							else
+							begin
+								counter <= counter + 1'b1;
+								base_io_addr <= local_addr + 1'b1;
+								state <= 4'b1001;
+							end
+						end 
+						else 
+						begin
+							state <= 4'b1010;
+						end
+						ram_write <= 1'b0;
+					end
 
-if (ram_write)
-    $display("RAMWRITE: local_addr %x ram_addr %x ram_write %x data_to_ram %x",local_addr,ram_addr,ram_write,data_to_ram);
- 
+				4'b1000:
+					begin
+						// Hiscore write back complete
+						ram_write <= 1'b0;
+					end
+
+				4'b1001:  // counter is correct, next state the output of our local ram will be correct
+					begin
+//						state <= 4'b0111;
+						state <= 4'b1010;
+					end
+
+				4'b1010: // local ram is  correct
+					begin
+						state <= 4'b1110;
+						ram_addr <= addr_base + (local_addr - base_io_addr);
+						ram_write <= 1'b1;
+					end
+					
+				4'b1110: // hold write for cycle
+					begin
+						state <= 4'b0110;
+					end
+					
+
+				4'b1111: // timer wait state
+					begin
+						if (wait_timer > 1'b0)
+							wait_timer <= wait_timer - 1'b1;
+						else
+							state <= next_state;
+					end
+			endcase
+		end
+	end
+	old_io_addr<=ioctl_addr;
 end
- 
-old_io_addr<=ioctl_addr;
 
- 
-end
+endmodule
 
-//
-// Save the hi score into memory so we can wait and insert
-// it into game memory at the right time
-//
+module dpram_hs #(
+	parameter dWidth=8,
+	parameter aWidth=8
+)(
+	input								clk,
 
-dpram_hs #(.addr_width_g(8),.data_width_g(8))
-hiscoredata (
-.clk_a_i(clk),
-.we_a_i(ioctl_download & ioctl_wr & (ioctl_index==4)), 
-.addr_a_i(ioctl_addr[7:0]),
-.data_a_i(ioctl_dout),
-.clk_b_i(clk),
-.addr_b_i(local_addr[7:0]),
-.data_b_o(data_to_ram)
+	input			[aWidth-1:0]	addr_a,
+	input			[dWidth-1:0]	d_a,
+	input								we_a,
+	output reg	[dWidth-1:0]	q_a,
+
+	input			[aWidth-1:0]	addr_b,
+	input			[dWidth-1:0]	d_b,
+	input								we_b,
+	output reg	[dWidth-1:0]	q_b
 );
 
-//reg [24:0] last_address;
-reg [7:0] last_index;
-reg done_downloading=0;
-reg last_ioctl_download=0;
-always @(posedge clk) begin
-//  if (ioctl_download & ioctl_wr & (ioctl_index==4))
-//	last_address<=ioctl_addr;
-  if (last_ioctl_download!=ioctl_download && ioctl_download==1'b0 && (last_index==4))
-	done_downloading=1'b1;
-  last_ioctl_download<=ioctl_download;
-  last_index<=ioctl_index;
-end
+reg [dWidth-1:0] ram [2**aWidth-1:0];
 
+always @(posedge clk) begin
+	if (we_a) begin 
+		ram[addr_a] <= d_a;
+		q_a <= d_a;
+	end
+	else
+	begin
+		q_a <= ram[addr_a];
+	end
+
+	if (we_b) begin 
+		ram[addr_b] <= d_b;
+		q_b <= d_b;
+	end
+	else
+	begin
+		q_b <= ram[addr_b];
+	end
+end
 
 endmodule

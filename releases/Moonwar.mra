@@ -11,7 +11,7 @@
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>moonwar</setname>
 	<rbf>scramble</rbf>
-	<buttons names="Fire,Thrust,Shield,Hyperflip,Start 1P,Start 2P,Coin" default="A,B,X,Y,Start,Select,R"/>
+	<buttons names="Fire,Thrust,Shield,Hyperflip,Start 1P,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FC,F3">
 		<dip bits="8,9"   name="Lives" ids="3,4,5,Free Play"/>
 		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>

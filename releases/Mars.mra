@@ -3,7 +3,7 @@
 	<mameversion>0217</mameversion>
 	<setname>mars</setname>
 	<rbf>scramble</rbf>
-	<buttons names="R Right,R Down,R Up,R Left,Start 1P,Start 2P,Coin" default="A,B,X,Y,Start,Select,R"/>
+	<buttons names="R Right,R Down,R Up,R Left,Start 1P,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FD,F9,FF">
 		<dip bits="9"  name="Coinage" ids="1c/1cr,2c/1cr"/>
 		<dip bits="17" name="Cabinet" ids="Upright,Cocktail"/>

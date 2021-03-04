@@ -77,12 +77,13 @@ port (
 	dl_wr            : in  std_logic;
 	dl_data          : in  std_logic_vector( 7 downto 0);
 
-    ram_address      : in  std_logic_vector(10 downto 0);
-    ram_data         : out std_logic_vector(7 downto 0);
-    ram_data_in		  : in  std_logic_vector(7 downto 0);
+	pause            : in  std_logic;
 
-    ram_data_write	  : in  std_logic;
-	
+	hs_address       : in  std_logic_vector(10 downto 0);
+	hs_data_out      : out std_logic_vector(7 downto 0);
+	hs_data_in       : in  std_logic_vector(7 downto 0);
+	hs_write         : in  std_logic;
+
 	FlipVertical     : in  std_logic
 
 );
@@ -137,10 +138,12 @@ port map (
 	dl_wr                 => dl_wr,
 	dl_data               => dl_data,
 
-	ram_address				 => ram_address,
-	ram_data				    => ram_data,
-	ram_data_in				 => ram_data_in,
-	ram_data_write			 => ram_data_write,
+	PAUSE                 => pause,
+
+	hs_address            => hs_address,
+	hs_data_out           => hs_data_out,
+	hs_data_in            => hs_data_in,
+	hs_write              => hs_write,
 
 	FlipVertical          => FlipVertical
 );
