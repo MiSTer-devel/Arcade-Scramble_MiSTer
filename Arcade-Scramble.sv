@@ -316,7 +316,7 @@ always @(posedge clk_sys) begin
 	if(~old_pause & m_pause) pause_toggle <= ~pause_toggle;
 	
 	// Screen dim while paused
-	rgb_out <= {r,g,b};
+	rgb_out <= rgb_in;
 	if(pause_toggle)
 	begin
 		if(pause_timer<pause_timer_dim)
