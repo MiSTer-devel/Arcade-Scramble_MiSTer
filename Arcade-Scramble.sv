@@ -162,7 +162,7 @@ localparam CONF_STR = {
 	"-;",
 	"h2O6,Rotation,Buttons,Spinner;",
 	"h2-;",
-	"h3O6,Fire Mode,4-Way,Move+Fire;",
+	"h3O67,Fire Mode,4-Way,Move with Fire,Second Joystick;",
 	"h3-;",
 	"DIP;",
 	"-;",
@@ -459,8 +459,12 @@ always @(*) begin
 			begin
 				hwsel = 7;
 				fourfire = 1;
-				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_start1, m_start2 };
-				input1 = status[6] ?
+				input0 = status[7] ?
+						 ~{ m_coin, 1'b0, m_left1, m_right1, m_down1, m_up1, m_start1, m_start2 }:
+						 ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_start1, m_start2 };
+				input1 = status[7] ?
+				         ~{ 1'b0, m_fire_e,          m_left2, m_right2, m_down2, m_up2, 2'b00 }:
+						 status[6] ?
 				         ~{ 1'b0, m_fire_e|m_fire_a, m_left,   m_right,  m_down,   m_up,     2'b00 }:
 				         ~{ 1'b0, m_fire_e,          m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
 				input2 = 8'hFF;
@@ -478,6 +482,12 @@ always @(*) begin
 					input1 = ~{ m_start1, m_start2, m_left, m_right, m_left, m_right, 2'b00 };
 					input2 = ~{ m_up, m_down, m_down, m_up, 3'b000, m_down };
 					input3 = ~{ m_up, 1'b0, m_down, 5'b00000 };
+				end
+				else if (status[7]) begin
+					input0 = ~{ m_coin, 1'b0, m_left1, m_right1, m_left2, m_right2, 1'b0, m_up1 };
+					input1 = ~{ m_start1, m_start2, m_left1, m_right1, m_left2, m_right2, 2'b00 };
+					input2 = ~{ m_up2, m_down1, m_down2, m_up1, 3'b000, m_down1 };
+					input3 = ~{ m_up2, 1'b0, m_down2, 5'b00000 };
 				end
 				else begin
 					input0 = ~{ m_coin, 1'b0, m_left, m_right, m_fire_d, m_fire_a, 1'b0, m_up };
@@ -505,16 +515,22 @@ always @(*) begin
 			begin
 				hwsel = 8;
 				fourfire = 1;
-				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
-				input1 = status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : ~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
+				input0 = status[7] ? ~{ m_coin, 1'b0, m_left1, m_right1, m_down1, m_up1, 1'b0, m_start1 } :
+						~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
+				input1 = status[7] ? ~{ 2'b00, m_left2, m_right2, m_down2, m_up2, 2'b00 } :
+						status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : 
+						~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
 				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
 			end
 		mod_rescue:
 			begin
 				hwsel = 9;
 				fourfire = 1;
-				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
-				input1 = status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : ~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
+				input0 = status[7] ? ~{ m_coin, 1'b0, m_left1, m_right1, m_down1, m_up1, 1'b0, m_start1 } :
+						~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, 1'b0, m_start1 };
+				input1 = status[7] ? ~{ 2'b00, m_left2, m_right2, m_down2, m_up2, 2'b00 } :
+						status[6] ? ~{ 2'b00, m_left, m_right, m_down, m_up, 2'b00 } : 
+						~{ 2'b00, m_fire_d, m_fire_a, m_fire_b, m_fire_c, 2'b00 };
 				input2 = ~{ 1'b0, m_start2, 2'b00, 3'b000, m_start1 };
 			end
 		mod_mimonkey:
