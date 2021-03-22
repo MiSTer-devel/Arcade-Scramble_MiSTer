@@ -2,6 +2,9 @@
     <name>Mars</name>
 	<mameversion>0217</mameversion>
 	<setname>mars</setname>
+	<year>1981</year>
+	<manufacturer>Artic</manufacturer>
+	<category>Shooter</category>
 	<rbf>scramble</rbf>
 	<buttons names="R Right,R Down,R Up,R Left,Start 1P,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FD,F9,FF">
