@@ -10,6 +10,9 @@
 	<mameversion>0216</mameversion>
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>losttomb</setname>
+	<year>1982</year>
+	<manufacturer>Stern Electronic</manufacturer>
+	<category>Platform</category>
 	<rbf>scramble</rbf>
 	<buttons names="Fire Right,Fire Down,Fire Up,Fire Left,Start 1P/Bomb,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FD,F3">
