@@ -11,6 +11,7 @@
 	<setname>atlantis2</setname>
 	<year>1981</year>
 	<manufacturer>Comsoft</manufacturer>
+	<category>Scrolling Shooter</category>
 	<rbf>scramble</rbf>
 	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="FF,FE,F3">
