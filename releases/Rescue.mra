@@ -4,7 +4,7 @@
 	<setname>rescue</setname>
 	<year>1982</year>
 	<manufacturer>Stern Electronic</manufacturer>
-	<category>Shoot 'em up</category>
+	<category>Shoot em up</category>
 	<rbf>scramble</rbf>
 	<buttons names="Shoot Right,Shoot Down,Shoot Up,Shoot Left,Start 1P/Bomb,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FD,F3">
