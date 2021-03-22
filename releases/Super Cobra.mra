@@ -3,6 +3,9 @@
 	<mameversion>0216</mameversion>
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>scobra</setname>
+	<year>1981</year>
+	<manufacturer>Konami</manufacturer>
+	<category>Scrolling Shooter</category>
 	<rbf>scramble</rbf>
 	<buttons names="Shoot,Bomb,-,-,Start 1P,Start 2P,Coin,Pause" default="A,B,Start,Select,R,L"/>
 	<switches default="FF,FD,F3">
