@@ -10,6 +10,9 @@
 	<mameversion>0216</mameversion>
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>spdcoin</setname>
+	<year>1984</year>
+	<manufacturer>Stern Electronic</manufacturer>
+	<category>Skill</category>
 	<rbf>scramble</rbf>
 	<buttons names="-,-,-,-,Start 1P,Start 2P,Coin,Pause" default="Start,Select,R,L"/>
 	<switches default="FF,FC,FB">
