@@ -10,6 +10,9 @@
 	<mameversion>0216</mameversion>
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>anteater</setname>
+	<year>1982</year>
+	<manufacturer>Stern Electronics</manufacturer>
+	<category>Maze</category>
 	<rbf>scramble</rbf>
 	<buttons names="Retract,-,-,-,Start 1P,Start 2P,Coin,Pause" default="A,Start,Select,R,L"/>
 	<switches default="FF,FD,FB">

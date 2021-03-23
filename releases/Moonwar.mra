@@ -10,6 +10,9 @@
 	<mameversion>0216</mameversion>
 	<mratimestamp>201911270000</mratimestamp>
 	<setname>moonwar</setname>
+	<year>1981</year>
+	<manufacturer>Stern Electronic</manufacturer>
+	<category>Shooter</category>
 	<rbf>scramble</rbf>
 	<buttons names="Fire,Thrust,Shield,Hyperflip,Start 1P,Start 2P,Coin,Pause" default="A,B,X,Y,Start,Select,R,L"/>
 	<switches default="FF,FC,F3">

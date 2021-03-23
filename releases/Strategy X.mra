@@ -2,6 +2,9 @@
     <name>Strategy X</name>
 	<mameversion>0217</mameversion>
 	<setname>stratgyx</setname>
+	<year>1981</year>
+	<manufacturer>Konami</manufacturer>
+	<category>Scrolling Shooter</category>
 	<rbf>scramble</rbf>
 	<buttons names="Fire,Turn Left,Turn Right,-,Start 1P,Start 2P,Coin,Pause" default="A,L,R,Start,Select,Y,X"/>
 	<switches default="FF,FC,F1,FF">
