@@ -124,7 +124,7 @@ localparam CONF_STR = {
 	"R0,Reset;",
 	"J1,Fire 1,Fire 2,Fire 3,Fire 4,Start 1P,Start 2P,Coin;",
 	"jn,A,B,X,Y,Start,Select,R;",
-	"jp,B,A,Y,X,Start,,Select;",
+	"jp,B,A,Y,X,Start,Select,R;",
 	"V,v",`BUILD_DATE
 };
 
@@ -307,9 +307,9 @@ wire m_fire_e  = m_fire1e    | m_fire2e;
 wire m_spccw   = m_spccw1    | m_spccw2;
 wire m_spcw    = m_spcw1     | m_spcw2;
 
-wire m_start1  = btn_start_1 | joy[8];
-wire m_start2  = btn_start_2 | joy[9];
-wire m_coin    = btn_coin_1  | btn_coin_2 | joy[10];
+wire m_start1  = joy1[8];
+wire m_start2  = joy[9] | joy2[8];
+wire m_coin    = joy[10];
 
 reg [8:0] sp;
 always @(posedge clk_sys) begin
