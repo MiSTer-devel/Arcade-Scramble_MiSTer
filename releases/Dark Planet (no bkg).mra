@@ -1,41 +1,69 @@
 <misterromdescription>
-    <name>Dark Planet</name>
-    <mameversion>0209</mameversion>
-	<setname>darkplnt</setname>
+	<name>Dark Planet</name>
+	<region></region>
+	<homebrew>no</homebrew>
+	<bootleg>no</bootleg>
+	<version>no BKG</version>
+	<alternative></alternative>
+	<platform></platform>
+	<series></series>
 	<year>1982</year>
-	<manufacturer>Stern Electronic</manufacturer>
-	<category>Shooter</category>
+	<manufacturer>Stern</manufacturer>
+	<category>Shooter - Multidirectional</category>
+
+	<setname>darkplnt</setname>
+	<parent>darkplnt</parent>
+	<mameversion>0209</mameversion>
 	<rbf>scramble</rbf>
-	<buttons names="Fire,Thrust,Bomb,-,Start 1P,Start 2P,Coin,Pause" default="A,B,L,Start,Select,R,L"/>
+	<about></about>
+
+	<resolution>15kHz</resolution>
+	<rotation>horizontal</rotation>
+	<flip></flip>
+
+	<players>1</players>
+	<joystick>2-way horizontal</joystick>
+	<special_controls></special_controls>
+	<num_buttons>2</num_buttons>
+	<buttons default="A,B,L,Start,Select,R,L" names="Fire,Thrust,Bomb,-,Start 1P,Start 2P,Coin,Pause"></buttons>
+
 	<switches default="FF,FD,FB">
-		<dip bits="8"     name="Bonus Occurence" ids="Every,Once"/>
-		<dip bits="9"     name="Lives" ids="3,5"/>
-		<dip bits="17,18" name="Coinage" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr"/>
-		<dip bits="19"    name="Bonus Life" ids="100K,200K"/>
-	</switches>
+		<dip bits="8" ids="Every,Once" name="Bonus Occurence"></dip>
+		<dip bits="9" ids="3,5" name="Lives"></dip>
+		<dip bits="17,18" ids="1c/2cr,1c/1cr,1c/3cr,1c/4cr" name="Coinage"></dip>
+		<dip bits="19" ids="100K,200K" name="Bonus Life"></dip>
+		</switches>
+
 	<rom index="1">
 		<part>09</part>
-	</rom>
-    <rom index="0" zip="darkplnt.zip" md5="db005b3ac77931ff97f625ccd6c73b42" type="merged">
-		<part crc="5a0ca559" name="drkplt2c.dat"/>
-		<part crc="52e2117d" name="drkplt2e.dat"/>
-		<part crc="4093219c" name="drkplt2g.dat"/>
-		<part crc="b974c78d" name="drkplt2j.dat"/>
-		<part crc="71a37385" name="drkplt2k.dat"/>
-		<part crc="5ad25154" name="drkplt2l.dat"/>
-		<part crc="8d2f0122" name="drkplt2m.dat"/>
-		<part crc="2d66253b" name="drkplt2p.dat"/>
-		<part crc="672b9454" name="5c.snd"/>
-		<part crc="672b9454" name="5c.snd"/>
-		<part crc="66ef3225" repeat="4" name="drkplt5h.dat"/>
-		<part crc="2af0ee66" repeat="4" name="drkplt5f.dat"/>
-		<part crc="86b6e124" name="6e.cpu"/>
-    </rom>
+		</rom>
+	<rom index="0" md5="db005b3ac77931ff97f625ccd6c73b42" type="merged" zip="darkplnt.zip">
+		<part crc="5a0ca559" name="drkplt2c.dat"></part>
+		<part crc="52e2117d" name="drkplt2e.dat"></part>
+		<part crc="4093219c" name="drkplt2g.dat"></part>
+		<part crc="b974c78d" name="drkplt2j.dat"></part>
+		<part crc="71a37385" name="drkplt2k.dat"></part>
+		<part crc="5ad25154" name="drkplt2l.dat"></part>
+		<part crc="8d2f0122" name="drkplt2m.dat"></part>
+		<part crc="2d66253b" name="drkplt2p.dat"></part>
+		<part crc="672b9454" name="5c.snd"></part>
+		<part crc="672b9454" name="5c.snd"></part>
+		<part crc="66ef3225" name="drkplt5h.dat" repeat="4"></part>
+		<part crc="2af0ee66" name="drkplt5f.dat" repeat="4"></part>
+		<part crc="86b6e124" name="6e.cpu"></part>
+		</rom>
+	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-		 00 00 80 B8 1E 00 4A 00
-		 00 00 80 F4 1E 00 51 00
-		</part>
-   </rom>
-   <nvram index="4" size="60"/>
+				 00 00 80 B8 1E 00 4A 00
+				 00 00 80 F4 1E 00 51 00
+				</part>
+		</rom>
+	<rom index="4"></rom>
+
+	<nvram index="4" size="60"></nvram>
+
+	<remark></remark>
+
+	<mratimestamp>20210430005030</mratimestamp>
 </misterromdescription>
