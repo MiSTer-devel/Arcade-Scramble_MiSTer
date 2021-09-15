@@ -211,10 +211,11 @@
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-				 00 00 83 F1 0A 63 01 00
-				 00 00 83 EF 02 63 04 00
-				</part>
-		</rom>
+		00 07 FF FF 00 FF 00 02 00 02 00 01 00 FF 02 00
+		00 00 83 F1 00 0A 63 01
+		00 00 83 EF 00 02 63 04
+		</part>
+	</rom>
 	<rom index="4"></rom>
 
 	<nvram index="4" size="12"></nvram>
