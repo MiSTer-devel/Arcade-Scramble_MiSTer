@@ -55,10 +55,11 @@
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-				 00 00 80 B8 1E 00 4A 00
-				 00 00 80 F4 1E 00 51 00
-				</part>
-		</rom>
+		00 07 FF FF 00 FF 00 02 00 02 00 01 00 FF 02 00
+		00 00 80 B8 00 1E 00 4A
+		00 00 80 F4 00 1E 00 51
+		</part>
+	</rom>
 	<rom index="4"></rom>
 
 	<nvram index="4" size="60"></nvram>

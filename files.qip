@@ -11,5 +11,6 @@ set_global_assignment -name VHDL_FILE rtl/scramble_video.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_audio.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble.vhd
 set_global_assignment -name VHDL_FILE rtl/scramble_top.vhd
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/hiscore.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hiscore.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/pause.v
 set_global_assignment -name SYSTEMVERILOG_FILE "Arcade-Scramble.sv"

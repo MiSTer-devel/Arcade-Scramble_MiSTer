@@ -57,9 +57,10 @@
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-				 00 00 81 13 3C 02 50 00
-				</part>
-		</rom>
+		00 05 00 00 00 FF 00 02 00 02 00 01 00 FF 04 00
+		00 00 81 13 00 3C 02 50
+		</part>
+	</rom>
 	<rom index="4"></rom>
 
 	<nvram index="4" size="60"></nvram>

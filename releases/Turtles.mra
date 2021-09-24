@@ -54,14 +54,15 @@
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-				 00 00 82 00 1E 00 00 00
-				 00 00 80 A8 03 00 00 00
-				 00 00 93 40 01 01 01 00
-				</part>
-		</rom>
+		04 00 00 00 00 FF 00 02 00 02 00 01 00 FF 02 00
+		00 00 82 00 00 1E 00 00
+		00 00 80 A8 00 03 00 00
+		00 00 93 40 00 01 00 00
+		</part>
+	</rom>
 	<rom index="4"></rom>
 
-	<nvram index="4" size="22"></nvram>
+	<nvram index="4" size="34"></nvram>
 
 	<remark></remark>
 

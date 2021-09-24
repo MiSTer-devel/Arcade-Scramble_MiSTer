@@ -302,7 +302,7 @@ begin
   -- other cpu signals
   reset_wd_l <= not RESET; -- FIX
 
-  p_cpu_wait : process(vblank, hblank, waen_l)
+  p_cpu_wait : process(vblank, hblank, waen_l, PAUSE)
   begin
     -- this is done a bit differently, the original had a late
     -- clock to the cpu, and as mreq came out a litle early it could assert

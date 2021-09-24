@@ -64,10 +64,11 @@
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
-				 00 00 42 00 1E 00 01 00
-				 00 00 40 A8 03 00 01 00
-				</part>
-		</rom>
+		00 07 FF FF 00 FF 00 02 00 02 00 01 00 FF 02 00
+		00 00 42 00 00 1E 00 01
+		00 00 40 A8 00 03 00 01
+		</part>
+	</rom>
 	<rom index="4"></rom>
 
 	<nvram index="4" size="33"></nvram>
