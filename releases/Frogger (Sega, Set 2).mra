@@ -11,7 +11,7 @@
 	<manufacturer>Konami</manufacturer>
 	<category>Platform - Climb</category>
 
-	<setname>frogger</setname>
+	<setname>froggers2</setname>
 	<parent>frogger</parent>
 	<mameversion>0216</mameversion>
 	<rbf>scramble</rbf>
