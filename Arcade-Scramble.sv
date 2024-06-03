@@ -187,6 +187,7 @@ assign LED_POWER = 0;
 assign BUTTONS   = 0;
 assign AUDIO_MIX = 0;
 assign HDMI_FREEZE = 0;
+assign VGA_DISABLE = 0;
 assign FB_FORCE_BLANK = 0;
 
 wire [1:0] ar = status[20:19];
