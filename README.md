@@ -16,6 +16,7 @@ Currently implemented:
 * Armored Car
 * Battle of Atlantis
 * Calipso
+* Cavelon
 * Dark Planet
 * Frogger
 * Lost Tomb
