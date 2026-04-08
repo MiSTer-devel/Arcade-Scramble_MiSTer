@@ -404,6 +404,7 @@ localparam mod_turtles  = 15;
 localparam mod_minefld  = 16;
 localparam mod_rescue   = 17;
 localparam mod_mimonkey = 18;
+localparam mod_cavelon  = 19;
 
 reg [7:0] mod = 0;
 always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
@@ -572,6 +573,10 @@ always @(*) begin
 		mod_mimonkey:
 			begin
 				hwsel = 12;
+			end
+		mod_cavelon:
+			begin
+				hwsel = 13;
 			end
 		default:;
 	endcase

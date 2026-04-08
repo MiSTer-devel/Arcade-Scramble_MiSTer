@@ -210,7 +210,9 @@ architecture RTL of SCRAMBLE_VIDEO is
   signal obj_rom_0_wr         : std_logic;
   signal obj_rom_1_wr         : std_logic;
   signal col_rom_wr           : std_logic;
-  signal col_rom2_wr           : std_logic;
+  signal col_rom2_wr          : std_logic;
+  
+  signal cavalon_page         : std_logic_vector(1 downto 0);
 
 begin
   p_hcnt_decode : process(I_HCNT)
@@ -418,6 +420,7 @@ begin
     if (ENA = '1') then
       if (col_load = '1') then -- colour load
         col_reg <= hpla(2 downto 0);
+		  cavalon_page <= hpla(5 downto 4);
       end if;
 
       if (objdata_load = '1') then -- sprite load
@@ -432,7 +435,7 @@ begin
     end if;
   end process;
 
-  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_GFXBANK, I_HWSEL)
+  p_obj_rom_addr : process(h256, vram_addr_xor, vram_dout, objdata, I_HCNT, I_GFXBANK, I_HWSEL, cavalon_page)
   variable obj_rom_addr_base : std_logic_vector(12 downto 0);
   begin
     obj_rom_addr_base( 2 downto 0) := vram_addr_xor(2 downto 0);
@@ -442,6 +445,8 @@ begin
       obj_rom_addr_base(12 downto 11) := I_GFXBANK;
       if I_HWSEL = I_HWSEL_CALIPSO then
         obj_rom_addr_base(12 downto 11) := objdata(7 downto 6);
+		elsif I_HWSEL = I_HWSEL_CAVELON then
+		  obj_rom_addr_base(12 downto 11) := cavalon_page;
       end if;
       obj_rom_addr_base(10 downto 3) := objdata(5 downto 0) & vram_addr_xor(3) & (objdata(6) xor I_HCNT(3)); -- sprites
     end if;

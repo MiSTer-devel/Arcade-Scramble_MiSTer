@@ -159,6 +159,9 @@ architecture RTL of SCRAMBLE is
     signal ram_ena          : std_logic;
 
     signal vram_data        : std_logic_vector(7 downto 0);
+	 
+	 signal rom_bank         : std_logic := '0'; -- Cavelon - current rom bank
+	 signal new_rom_bank     : std_logic := '0'; -- Cavelon - next rom bank
 
 begin
 
@@ -407,15 +410,40 @@ begin
 
       if I_HWSEL = I_HWSEL_DARKPLNT or I_HWSEL = I_HWSEL_STRATGYX then
          if cpu_addr(15) = '1' then page_4to7_l <= '0'; end if;
-      elsif I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY then
+      elsif I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY or I_HWSEL = I_HWSEL_CAVELON then
         if (cpu_addr(15 downto 14) = "01") then page_4to7_l <= '0'; end if;
       else
         if (cpu_addr(15 downto 14) = "10") then page_4to7_l <= '0'; end if;
       end if;
+		
     end if;
 
   end process;
 
+  -- Cavelon switches the lower 8k of rom between two different version
+  -- We load the second rom twice and switch the whole 16k instead.
+  
+  CavelonROMBank : process 
+  begin
+     wait until rising_edge(CLK);
+	  
+	  if reset_wd_l = '0' then
+		   rom_bank <= '0';
+		   new_rom_bank <= '0';
+	  elsif I_HWSEL = I_HWSEL_CAVELON then
+			-- Bank change required ?
+			if (cpu_mreq_l = '0') and (cpu_rfsh_l = '1') then
+			 if cpu_addr(15) = '1' then new_rom_bank <= not rom_bank; end if;
+			end if;
+
+			-- complete bank change at end of read/write request
+			if (cpu_mreq_l = '1') then
+			 rom_bank <= new_rom_bank;
+			end if;
+	  end if;
+  
+  end process;
+  
   p_mem_decode2 : process(I_HWSEL, cpu_addr, page_4to7_l, cpu_rfsh_l, cpu_rd_l, cpu_wr_l, wren)
   begin
     waen_l <= '1';
@@ -620,7 +648,11 @@ begin
 		data_b_o => rom_dout
 	);
 
-	rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
+	-- rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS else cpu_addr(14 downto 0);
+
+	rom_addr <= cpu_addr(14 downto 4) & cpu_addr(2) & cpu_addr(0) & cpu_addr(3) & cpu_addr(1) when I_HWSEL = I_HWSEL_MARS 
+					else rom_bank & cpu_addr(13 downto 0) when I_HWSEL = I_HWSEL_CAVELON 
+	            else cpu_addr(14 downto 0);
 
 	u_cpu_ram : work.dpram2 generic map (11,8)
 	port map
@@ -652,7 +684,7 @@ begin
     variable ram_addr : std_logic_vector(1 downto 0);
   begin
 
-    if I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY then
+    if I_HWSEL = I_HWSEL_SCRAMBLE or I_HWSEL = I_HWSEL_MARS or I_HWSEL = I_HWSEL_MIMONKEY or I_HWSEL = I_HWSEL_CAVELON then
       ram_addr := "01";
     else
       ram_addr := "10";
@@ -668,7 +700,7 @@ begin
     elsif (cpu_mreq_l = '0') and (cpu_rfsh_l = '1') then
       if I_HWSEL = I_HWSEL_MIMONKEY and (cpu_addr(15 downto 14) = "11" or cpu_addr(15 downto 14) = "00") and (cpu_rd_l = '0') then
         cpu_data_in <= rom_dout;
-      elsif (cpu_addr(15) = '0') and I_HWSEL /= I_HWSEL_MIMONKEY and ((I_HWSEL /= I_HWSEL_SCRAMBLE and I_HWSEL /= I_HWSEL_MARS) or cpu_addr(14) = '0') and (cpu_rd_l = '0') then
+      elsif (cpu_addr(15) = '0') and I_HWSEL /= I_HWSEL_MIMONKEY and ((I_HWSEL /= I_HWSEL_SCRAMBLE and I_HWSEL /= I_HWSEL_MARS and I_HWSEL /= I_HWSEL_CAVELON) or cpu_addr(14) = '0') and (cpu_rd_l = '0') then
         cpu_data_in <= rom_dout;
       --
       elsif (cpu_addr(15 downto 14) = ram_addr) then
