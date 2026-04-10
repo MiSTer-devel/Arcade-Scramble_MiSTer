@@ -11,7 +11,7 @@
 	<manufacturer>Jetsoft</manufacturer>
 	<category>Maze - Horizontal</category>
 
-	<setname>scramble</setname>
+	<setname>cavelon</setname>
 	<parent>scramble</parent>
 	<mameversion>0216</mameversion>
 	<rbf>scramble</rbf>
