@@ -405,6 +405,7 @@ localparam mod_minefld  = 16;
 localparam mod_rescue   = 17;
 localparam mod_mimonkey = 18;
 localparam mod_cavelon  = 19;
+localparam mod_superbon = 20;
 
 reg [7:0] mod = 0;
 always @(posedge clk_sys) if (ioctl_wr & (ioctl_index==1)) mod <= ioctl_dout;
@@ -442,6 +443,13 @@ always @(*) begin
 		mod_scobra:
 			begin
 				hwsel = 2;
+			end
+		mod_superbon:
+			begin
+				hwsel = 2;
+				input0 = ~{ m_coin, 1'b0, m_left, m_right, m_down, m_up, m_start1, m_start2 };
+				input1 = ~{ 1'b0, m_fire_a, 2'b00, m_fire_b, 3'b000 };
+				input2 = 8'hFF;
 			end
 		mod_tazman:
 			begin

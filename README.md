@@ -11,6 +11,7 @@ A simulation model of Konami's Scramble hardware.
 
 Currently implemented:
 
+* Agent Super Bond (unencrypted Super Cobra conversion)
 * Amidar
 * Anteater
 * Armored Car
